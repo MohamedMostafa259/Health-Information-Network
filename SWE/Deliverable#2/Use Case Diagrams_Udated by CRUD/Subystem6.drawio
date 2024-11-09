@@ -1,0 +1,70 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36" version="24.8.4">
+  <diagram name="Page-1" id="929967ad-93f9-6ef4-fab6-5d389245f69c">
+    <mxGraphModel dx="1224" dy="659" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1.5" pageWidth="1169" pageHeight="826" background="none" math="0" shadow="0">
+      <root>
+        <mxCell id="0" style=";html=1;" />
+        <mxCell id="1" style=";html=1;" parent="0" />
+        <mxCell id="1672d66443f91eb5-20" style="edgeStyle=none;rounded=0;html=1;dashed=1;endArrow=none;endFill=0;jettySize=auto;orthogonalLoop=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1187" y="825" as="sourcePoint" />
+            <mxPoint x="1187" y="605" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1672d66443f91eb5-23" value="Title" style="text;strokeColor=none;fillColor=none;html=1;fontSize=24;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
+          <mxGeometry x="120" y="40" width="1510" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="qtl4i1bpU1BIB_V1NooI-1" value="Adminstrator&amp;nbsp;" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="600" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="qtl4i1bpU1BIB_V1NooI-2" value="Generate Bill" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="710" y="620" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="qtl4i1bpU1BIB_V1NooI-4" value="&lt;meta charset=&quot;utf-8&quot;&gt;Process Payment" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="780" width="250" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="qtl4i1bpU1BIB_V1NooI-6" value="patient&amp;nbsp;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="550" y="760" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="qtl4i1bpU1BIB_V1NooI-8" value="Insurance Company&amp;nbsp;" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="540" y="1020" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="qtl4i1bpU1BIB_V1NooI-9" value="&lt;meta charset=&quot;utf-8&quot;&gt;Update Billing Information" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="980" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="qtl4i1bpU1BIB_V1NooI-11" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="qtl4i1bpU1BIB_V1NooI-9">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="860" y="860" as="sourcePoint" />
+            <mxPoint x="600" y="830" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qtl4i1bpU1BIB_V1NooI-12" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="qtl4i1bpU1BIB_V1NooI-4" target="qtl4i1bpU1BIB_V1NooI-6">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="860" y="860" as="sourcePoint" />
+            <mxPoint x="910" y="810" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qtl4i1bpU1BIB_V1NooI-13" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="qtl4i1bpU1BIB_V1NooI-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="860" y="860" as="sourcePoint" />
+            <mxPoint x="600" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qtl4i1bpU1BIB_V1NooI-14" value="View billing history&amp;nbsp;" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="715" y="890" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="qtl4i1bpU1BIB_V1NooI-17" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="qtl4i1bpU1BIB_V1NooI-14" target="qtl4i1bpU1BIB_V1NooI-6">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="860" y="860" as="sourcePoint" />
+            <mxPoint x="600" y="810" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qtl4i1bpU1BIB_V1NooI-19" value="" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="qtl4i1bpU1BIB_V1NooI-4">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="860" y="860" as="sourcePoint" />
+            <mxPoint x="590" y="1060" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
