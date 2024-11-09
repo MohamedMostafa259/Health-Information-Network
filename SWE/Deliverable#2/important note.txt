@@ -1,1 +1,0 @@
-These subsystems are the update of the old use case diagram
