@@ -1,4 +1,6 @@
--- CREATE DATABASE HIN; -- HIN stands for Health Information Network
+CREATE DATABASE HIN; -- HIN stands for Health Information Network
+
+USE HIN;
 
 CREATE TABLE HealthProvider (
 	ProviderID VARCHAR(20) PRIMARY KEY,
@@ -185,7 +187,7 @@ CREATE TABLE CaregiversNotifications
 
 /***************  Populating The Database ***************/
 
--- Fix for Patient table: Cannot have NULL InsuranceID/PackageID
+-- Fix for Patient table: Can have NULL InsuranceID/PackageID
 ALTER TABLE Patient
 ALTER COLUMN InsuranceID VARCHAR(20) NULL;
 ALTER TABLE Patient
@@ -194,7 +196,6 @@ ALTER COLUMN PackageID VARCHAR(2) NULL;
 -- Now populate tables in correct order to respect foreign key constraints
 -- First, populate base tables that don't depend on others
 
--- HealthProvider (no changes needed)
 INSERT INTO HealthProvider (ProviderID, Availability, Specialty, Name) VALUES
 ('HP001', '09 am To 05 pm', 'Cardiology', 'Dr. Sarah Johnson'),
 ('HP002', '10 am To 06 pm', 'Pediatrics', 'Dr. Michael Chen'),
@@ -202,7 +203,6 @@ INSERT INTO HealthProvider (ProviderID, Availability, Specialty, Name) VALUES
 ('HP004', '11 am To 07 pm', 'Dermatology', 'Dr. Emily Rodriguez'),
 ('HP005', '09 am To 05 pm', 'Neurology', 'Dr. David Kim');
 
--- GovernmentRegulator (no changes needed)
 INSERT INTO GovernmentRegulator (RegulatorID, Name, Position) VALUES
 ('REG001', 'John Smith', 'Chief Medical Officer'),
 ('REG002', 'Lisa Anderson', 'Health Inspector'),
@@ -210,7 +210,6 @@ INSERT INTO GovernmentRegulator (RegulatorID, Name, Position) VALUES
 ('REG004', 'Maria Garcia', 'Compliance Officer'),
 ('REG005', 'William Lee', 'Quality Assessor');
 
--- InsuranceCompany (no changes needed)
 INSERT INTO InsuranceCompany (InsuranceID, CompanyName, Email, Phone) VALUES
 ('INS001', 'HealthGuard', 'info@healthguard.com', '18005551234'),
 ('INS002', 'MediCare Plus', 'contact@medicare.com', '18005555678'),
@@ -218,11 +217,9 @@ INSERT INTO InsuranceCompany (InsuranceID, CompanyName, Email, Phone) VALUES
 ('INS004', 'Shield Insurance', 'help@shield.com', '18005553456'),
 ('INS005', 'Care First', 'info@carefirst.com', '18005557890');
 
--- Package (no changes needed)
 INSERT INTO Package (PackageID) VALUES
 ('P1'), ('P2'), ('P3'), ('P4'), ('P5');
 
--- PackageDetails (no changes needed)
 INSERT INTO PackageDetails (IllnessType, Percentage, PackageID) VALUES
 ('Chronic', 0.80, 'P1'),
 ('Emergency', 0.90, 'P1'),
@@ -231,7 +228,6 @@ INSERT INTO PackageDetails (IllnessType, Percentage, PackageID) VALUES
 ('Surgical', 0.95, 'P4'),
 ('Dental', 0.60, 'P5');
 
--- InsuranceCompanyPackages (no changes needed)
 INSERT INTO InsuranceCompanyPackages (InsuranceID, PackageID) VALUES
 ('INS001', 'P1'),
 ('INS001', 'P2'),
@@ -248,7 +244,6 @@ INSERT INTO Patient (PatientID, Name, PhoneNo, NationalID, InsuranceStatus, Birt
 ('PAT004', 'Daniel Lee', '45678901234', '45678901234567', 1, '1978-11-30', 'Male', 'daniel@email.com', 45, 'INS003', 'P4'),
 ('PAT005', 'Emma Davis', '56789012345', '56789012345678', 1, '1992-07-25', 'Female', 'emma@email.com', 31, 'INS001', 'P2');
 
--- Appointment
 INSERT INTO Appointment (AppointmentID, EmergencyStatus, Time, Type_of_illness, PaymentAmount, PaymentMethod, PatientID) VALUES
 ('APT001', 'Low', '2024-01-20', 'Routine Checkup', 150, 'Cash', 'PAT001'),
 ('APT002', 'High', '2024-02-05', 'Chest Pain', 500, 'Credit', 'PAT002'),
@@ -256,7 +251,6 @@ INSERT INTO Appointment (AppointmentID, EmergencyStatus, Time, Type_of_illness, 
 ('APT004', 'Low', '2024-03-01', 'Vaccination', 100, 'Cash', 'PAT004'),
 ('APT005', 'High', '2024-03-10', 'Migraine', 300, 'Credit', 'PAT005');
 
--- Report
 INSERT INTO Report (ReportID, ReportType, GenerateDate) VALUES
 ('REP001', 'Medical', '2024-01-15'),
 ('REP002', 'Medical', '2024-02-01'),
@@ -264,7 +258,6 @@ INSERT INTO Report (ReportID, ReportType, GenerateDate) VALUES
 ('REP004', 'Analysis', '2024-03-01'),
 ('REP005', 'Medical', '2024-03-15');
 
--- HealthProviderAppointments
 INSERT INTO HealthPoviderAppointments (AppointmentID, ProviderID) VALUES
 ('APT001', 'HP001'),
 ('APT002', 'HP001'),
@@ -272,7 +265,6 @@ INSERT INTO HealthPoviderAppointments (AppointmentID, ProviderID) VALUES
 ('APT004', 'HP002'),
 ('APT005', 'HP005');
 
--- HealthRecord
 INSERT INTO HealthRecord (RecordID, TypeOfIncident, DateOfIncident, Details, PatientID, AppointmentID, ProviderID) VALUES
 ('REC001', 'Routine Checkup', '2024-01-20', 'Annual physical examination - all vitals normal', 'PAT001', 'APT001', 'HP001'),
 ('REC002', 'Emergency', '2024-02-05', 'Acute chest pain - EKG performed', 'PAT002', 'APT002', 'HP001'),
@@ -280,13 +272,11 @@ INSERT INTO HealthRecord (RecordID, TypeOfIncident, DateOfIncident, Details, Pat
 ('REC004', 'Preventive', '2024-03-01', 'Seasonal flu vaccination administered', 'PAT004', 'APT004', 'HP002'),
 ('REC005', 'Emergency', '2024-03-10', 'Severe migraine - prescribed medication', 'PAT005', 'APT005', 'HP005');
 
--- Regulator_Access_HealthRecord
 INSERT INTO Regulator_Access_HealthRecord (RegulatorID, RecordID) VALUES
 ('REG001', 'REC001'),
 ('REG002', 'REC002'),
 ('REG003', 'REC003');
 
--- GovernmentRegulatorReports
 INSERT INTO GovernmentRegulatorReports (ReportID, RegulatorID) VALUES
 ('REP003', 'REG001'),
 ('REP004', 'REG002');
@@ -305,21 +295,17 @@ INSERT INTO Notification (NotificationID, Message, NotificationType, Date, Patie
 ('NOT004', 'Vaccination due reminder', 'SMS', '2024-02-28', 'PAT004', 'INS003', 'APT004'),
 ('NOT005', 'Prescription ready for pickup', 'Email', '2024-03-10', 'PAT005', 'INS001', 'APT005');
 
-
--- ReportGeneration
 INSERT INTO ReportGeneration (NotificationID, ProviderID, ReportID) VALUES
 ('NOT001', 'HP001', 'REP001'),
 ('NOT002', 'HP001', 'REP002'),
 ('NOT005', 'HP005', 'REP005');
 
--- Card
 INSERT INTO Card (CardNumber, ExpirationDate, CardHolderName, CardType, BankName, PatientID) VALUES
 ('4532789012345678', '2025-12-31', 'Alice Thompson', 'Credit', 'CitiBank', 'PAT001'),
 ('5678901234567890', '2026-06-30', 'Bob Martinez', 'Debit', 'Chase', 'PAT002'),
 ('4111567890123456', '2025-09-30', 'Daniel Lee', 'Credit', 'Wells Fargo', 'PAT004'),
 ('5432109876543210', '2026-03-31', 'Emma Davis', 'Debit', 'Bank of America', 'PAT005');
 
--- Caregiver
 INSERT INTO Caregiver (Relationship, Name, Phone, Email) VALUES
 ('Spouse', 'John Thompson', '98765432101', 'john.t@email.com'),
 ('Parent', 'Maria Martinez', '87654321012', 'maria.m@email.com'),
@@ -327,7 +313,6 @@ INSERT INTO Caregiver (Relationship, Name, Phone, Email) VALUES
 ('Child', 'Sophie Lee', '65432101234', 'sophie.l@email.com'),
 ('Spouse', 'Mark Davis', '54321012345', 'mark.d@email.com');
 
--- CaregiversOfPatients
 INSERT INTO CaregiversOfPatients (PatientID, Relationship, Name) VALUES
 ('PAT001', 'Spouse', 'John Thompson'),
 ('PAT002', 'Parent', 'Maria Martinez'),
@@ -335,7 +320,6 @@ INSERT INTO CaregiversOfPatients (PatientID, Relationship, Name) VALUES
 ('PAT004', 'Child', 'Sophie Lee'),
 ('PAT005', 'Spouse', 'Mark Davis');
 
--- CaregiversNotifications (fixed to include PatientID)
 INSERT INTO CaregiversNotifications (Relationship, Name, NotificationID, PatientID) VALUES
 ('Spouse', 'John Thompson', 'NOT001', 'PAT001'),
 ('Parent', 'Maria Martinez', 'NOT002', 'PAT002'),
