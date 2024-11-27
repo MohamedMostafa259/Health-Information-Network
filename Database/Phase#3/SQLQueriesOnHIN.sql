@@ -307,6 +307,140 @@ WHERE PatientID IN (
 
 /***************************************  MOHAMED IBRAHIM | 22-101058  ***************************************/
 
+-- Track multi-provider patient patterns
+-- Frequency: Quarterly - For care coordination
+SELECT 
+    p.Name AS PatientName,
+    COUNT(DISTINCT hp.ProviderID) AS DifferentProviders,
+    COUNT(DISTINCT hp.Specialty) AS DifferentSpecialties,
+    MAX(a.Time) AS LastAppointment
+FROM Patient p
+JOIN Appointment a ON p.PatientID = a.PatientID
+JOIN HealthPoviderAppointments hpa ON a.AppointmentID = hpa.AppointmentID
+JOIN HealthProvider hp ON hpa.ProviderID = hp.ProviderID
+GROUP BY p.Name
+HAVING COUNT(DISTINCT hp.ProviderID) > 1
+ORDER BY DifferentProviders DESC;
+
+-- Analyze insurance company response patterns
+-- Frequency: Monthly - For service quality monitoring
+SELECT 
+    ic.CompanyName,
+    COUNT(n.NotificationID) AS NotificationsSent,
+    COUNT(DISTINCT p.PatientID) AS PatientsServed
+FROM InsuranceCompany ic
+JOIN Patient p ON ic.InsuranceID = p.InsuranceID
+JOIN Appointment a ON p.PatientID = a.PatientID
+LEFT JOIN Notification n ON a.AppointmentID = n.AppointmentID
+GROUP BY ic.CompanyName;
+
+-- Track payment amount distributions
+-- Frequency: Monthly - For financial analysis
+SELECT 
+    FLOOR(a.PaymentAmount/100)*100 AS PaymentBracket,
+    COUNT(*) AS AppointmentCount,
+    COUNT(DISTINCT p.PatientID) AS UniquePatients,
+    COUNT(DISTINCT hp.ProviderID) AS UniqueProviders
+FROM Appointment a
+JOIN Patient p ON a.PatientID = p.PatientID
+JOIN HealthPoviderAppointments hpa ON a.AppointmentID = hpa.AppointmentID
+JOIN HealthProvider hp ON hpa.ProviderID = hp.ProviderID
+GROUP BY FLOOR(a.PaymentAmount/100)*100
+ORDER BY PaymentBracket;
+
+-- Analyze patient age distribution by specialty
+-- Frequency: Quarterly - For demographic analysis
+SELECT 
+    hp.Specialty,
+    MIN(p.Age) AS YoungestPatient,
+    MAX(p.Age) AS OldestPatient,
+    AVG(p.Age) AS AvgAge,
+    COUNT(DISTINCT p.PatientID) AS TotalPatients
+FROM HealthProvider hp
+JOIN HealthPoviderAppointments hpa ON hp.ProviderID = hpa.ProviderID
+JOIN Appointment a ON hpa.AppointmentID = a.AppointmentID
+JOIN Patient p ON a.PatientID = p.PatientID
+GROUP BY hp.Specialty;
+
+-- Track health record complexity
+-- Frequency: Monthly - For resource planning
+SELECT 
+    hr.TypeOfIncident,
+    COUNT(*) AS RecordCount,
+    AVG(LEN(hr.Details)) AS AvgDetailsLength,
+    COUNT(DISTINCT rar.RegulatorID) AS RegulatorAccessCount
+FROM HealthRecord hr
+LEFT JOIN Regulator_Access_HealthRecord rar ON hr.RecordID = rar.RecordID
+GROUP BY hr.TypeOfIncident
+ORDER BY AvgDetailsLength DESC;
+
+-- Analyze caregiver notification effectiveness
+-- Frequency: Monthly - For communication optimization
+SELECT 
+    c.Relationship,
+    n.NotificationType,
+    COUNT(*) AS NotificationCount,
+    COUNT(DISTINCT c.PatientID) AS PatientsAffected,
+    COUNT(DISTINCT a.AppointmentID) AS AppointmentsCovered
+FROM Caregiver c
+JOIN CaregiversNotifications cn ON c.PatientID = cn.PatientID 
+    AND c.Name = cn.Name 
+    AND c.Relationship = cn.Relationship
+JOIN Notification n ON cn.NotificationID = n.NotificationID
+JOIN Appointment a ON n.AppointmentID = a.AppointmentID
+GROUP BY c.Relationship, n.NotificationType;
+
+-- Analyze insurance coverage gaps
+-- Frequency: Monthly - For insurance optimization
+SELECT 
+    pd.IllnessType,
+    AVG(pd.Percentage) AS AvgCoverage,
+    COUNT(DISTINCT p.PatientID) AS PatientsAffected,
+    COUNT(DISTINCT a.AppointmentID) AS AppointmentsProcessed,
+    AVG(a.PaymentAmount) AS AvgPaymentAmount
+FROM PackageDetails pd
+JOIN Patient p ON pd.PackageID = p.PackageID
+JOIN Appointment a ON p.PatientID = a.PatientID
+WHERE p.InsuranceStatus = 1
+GROUP BY pd.IllnessType;
+
+---
+
+-- Retrieve insurance companies offering more packages than the average.
+-- Frequency: Common in insurance analytics.
+SELECT InsuranceID, CompanyName
+FROM InsuranceCompany
+WHERE InsuranceID IN (
+    SELECT InsuranceID
+    FROM InsuranceCompanyPackages
+    GROUP BY InsuranceID
+    HAVING COUNT(PackageID) > (
+        SELECT AVG(package_count) 
+        FROM (
+            SELECT InsuranceID, COUNT(PackageID) AS package_count
+            FROM InsuranceCompanyPackages
+            GROUP BY InsuranceID
+        ) AS temp
+    )
+);
+
+-- List patients who made more appointments than the average number.
+-- Frequency: Useful for analyzing frequent healthcare users.
+SELECT PatientID, Name
+FROM Patient
+WHERE PatientID IN (
+    SELECT PatientID
+    FROM Appointment
+    GROUP BY PatientID
+    HAVING COUNT(AppointmentID) > (
+        SELECT AVG(appointment_count)
+        FROM (
+            SELECT PatientID, COUNT(AppointmentID) AS appointment_count
+            FROM Appointment
+            GROUP BY PatientID
+        ) AS temp
+    )
+);
 
 
 
