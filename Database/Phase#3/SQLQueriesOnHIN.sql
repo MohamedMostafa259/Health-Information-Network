@@ -307,182 +307,356 @@ WHERE PatientID IN (
 
 /***************************************  MOHAMED IBRAHIM | 22-101058  ***************************************/
 
+-- Track multi-provider patient patterns
+-- Frequency: Quarterly - For care coordination
+SELECT 
+    p.Name AS PatientName,
+    COUNT(DISTINCT hp.ProviderID) AS DifferentProviders,
+    COUNT(DISTINCT hp.Specialty) AS DifferentSpecialties,
+    MAX(a.Time) AS LastAppointment
+FROM Patient p
+JOIN Appointment a ON p.PatientID = a.PatientID
+JOIN HealthPoviderAppointments hpa ON a.AppointmentID = hpa.AppointmentID
+JOIN HealthProvider hp ON hpa.ProviderID = hp.ProviderID
+GROUP BY p.Name
+HAVING COUNT(DISTINCT hp.ProviderID) > 1
+ORDER BY DifferentProviders DESC;
+
+-- Analyze insurance company response patterns
+-- Frequency: Monthly - For service quality monitoring
+SELECT 
+    ic.CompanyName,
+    COUNT(n.NotificationID) AS NotificationsSent,
+    COUNT(DISTINCT p.PatientID) AS PatientsServed
+FROM InsuranceCompany ic
+JOIN Patient p ON ic.InsuranceID = p.InsuranceID
+JOIN Appointment a ON p.PatientID = a.PatientID
+LEFT JOIN Notification n ON a.AppointmentID = n.AppointmentID
+GROUP BY ic.CompanyName;
+
+-- Track payment amount distributions
+-- Frequency: Monthly - For financial analysis
+SELECT 
+    FLOOR(a.PaymentAmount/100)*100 AS PaymentBracket,
+    COUNT(*) AS AppointmentCount,
+    COUNT(DISTINCT p.PatientID) AS UniquePatients,
+    COUNT(DISTINCT hp.ProviderID) AS UniqueProviders
+FROM Appointment a
+JOIN Patient p ON a.PatientID = p.PatientID
+JOIN HealthPoviderAppointments hpa ON a.AppointmentID = hpa.AppointmentID
+JOIN HealthProvider hp ON hpa.ProviderID = hp.ProviderID
+GROUP BY FLOOR(a.PaymentAmount/100)*100
+ORDER BY PaymentBracket;
+
+-- Analyze patient age distribution by specialty
+-- Frequency: Quarterly - For demographic analysis
+SELECT 
+    hp.Specialty,
+    MIN(p.Age) AS YoungestPatient,
+    MAX(p.Age) AS OldestPatient,
+    AVG(p.Age) AS AvgAge,
+    COUNT(DISTINCT p.PatientID) AS TotalPatients
+FROM HealthProvider hp
+JOIN HealthPoviderAppointments hpa ON hp.ProviderID = hpa.ProviderID
+JOIN Appointment a ON hpa.AppointmentID = a.AppointmentID
+JOIN Patient p ON a.PatientID = p.PatientID
+GROUP BY hp.Specialty;
+
+-- Track health record complexity
+-- Frequency: Monthly - For resource planning
+SELECT 
+    hr.TypeOfIncident,
+    COUNT(*) AS RecordCount,
+    AVG(LEN(hr.Details)) AS AvgDetailsLength,
+    COUNT(DISTINCT rar.RegulatorID) AS RegulatorAccessCount
+FROM HealthRecord hr
+LEFT JOIN Regulator_Access_HealthRecord rar ON hr.RecordID = rar.RecordID
+GROUP BY hr.TypeOfIncident
+ORDER BY AvgDetailsLength DESC;
+
+-- Analyze caregiver notification effectiveness
+-- Frequency: Monthly - For communication optimization
+SELECT 
+    c.Relationship,
+    n.NotificationType,
+    COUNT(*) AS NotificationCount,
+    COUNT(DISTINCT c.PatientID) AS PatientsAffected,
+    COUNT(DISTINCT a.AppointmentID) AS AppointmentsCovered
+FROM Caregiver c
+JOIN CaregiversNotifications cn ON c.PatientID = cn.PatientID 
+    AND c.Name = cn.Name 
+    AND c.Relationship = cn.Relationship
+JOIN Notification n ON cn.NotificationID = n.NotificationID
+JOIN Appointment a ON n.AppointmentID = a.AppointmentID
+GROUP BY c.Relationship, n.NotificationType;
+
+-- Analyze insurance coverage gaps
+-- Frequency: Monthly - For insurance optimization
+SELECT 
+    pd.IllnessType,
+    AVG(pd.Percentage) AS AvgCoverage,
+    COUNT(DISTINCT p.PatientID) AS PatientsAffected,
+    COUNT(DISTINCT a.AppointmentID) AS AppointmentsProcessed,
+    AVG(a.PaymentAmount) AS AvgPaymentAmount
+FROM PackageDetails pd
+JOIN Patient p ON pd.PackageID = p.PackageID
+JOIN Appointment a ON p.PatientID = a.PatientID
+WHERE p.InsuranceStatus = 1
+GROUP BY pd.IllnessType;
+
+---
+
+-- Retrieve insurance companies offering more packages than the average.
+-- Frequency: Common in insurance analytics.
+SELECT InsuranceID, CompanyName
+FROM InsuranceCompany
+WHERE InsuranceID IN (
+    SELECT InsuranceID
+    FROM InsuranceCompanyPackages
+    GROUP BY InsuranceID
+    HAVING COUNT(PackageID) > (
+        SELECT AVG(package_count) 
+        FROM (
+            SELECT InsuranceID, COUNT(PackageID) AS package_count
+            FROM InsuranceCompanyPackages
+            GROUP BY InsuranceID
+        ) AS temp
+    )
+);
+
+-- List patients who made more appointments than the average number.
+-- Frequency: Useful for analyzing frequent healthcare users.
+SELECT PatientID, Name
+FROM Patient
+WHERE PatientID IN (
+    SELECT PatientID
+    FROM Appointment
+    GROUP BY PatientID
+    HAVING COUNT(AppointmentID) > (
+        SELECT AVG(appointment_count)
+        FROM (
+            SELECT PatientID, COUNT(AppointmentID) AS appointment_count
+            FROM Appointment
+            GROUP BY PatientID
+        ) AS temp
+    )
+);
 
 
 
 /***************************************  ADHAM SOBHY | 23-101003  ***************************************/
 
 -- 1. Find the patient name, the count of distinct insurance changes,
--- the earliest appointment time, and the latest appointment time for patients with InsuranceStatus equal to 1,
--- who have more than one distinct InsuranceID
+		-- the earliest appointment time, and the latest appointment time for patients with InsuranceStatus equal to 1,
+		-- who have more than one distinct InsuranceID
 
--- Frequency: Quarterly - For insurance relationship management
-SELECT 
-	p.Name AS PatientName,
-	COUNT(DISTINCT p.InsuranceID) AS InsuranceChanges,
-	MIN(a.Time) AS FirstAppointment,
-	MAX(a.Time) AS LastAppointment
+		-- Frequency: Quarterly - For insurance relationship management
+		SELECT 
+    p.Name AS PatientName,
+    COUNT(DISTINCT p.InsuranceID) AS InsuranceChanges,
+    MIN(a.Time) AS FirstAppointment,
+    MAX(a.Time) AS LastAppointment
 FROM Patient p
-JOIN Appointment a ON p.PatientID = a.PatientID
+JOIN Appointment a 
+    ON p.PatientID = a.PatientID
 WHERE p.InsuranceStatus = 1
 GROUP BY p.Name
-HAVING COUNT(DISTINCT p.InsuranceID) > 1;
+HAVING COUNT(DISTINCT p.InsuranceID) >= 1;
 
--- 2. Track the provider name, the total number of appointments, the average payment amount,
---    the number of unique patients, and the number of notifications sent for each health provider.
 
--- Frequency: Monthly - For performance evaluation
-SELECT 
-	hp.Name AS ProviderName,
-	COUNT(a.AppointmentID) AS TotalAppointments,
-	AVG(a.PaymentAmount) AS AvgPaymentAmount,
-	COUNT(DISTINCT p.PatientID) AS UniquePatients,
-	COUNT(DISTINCT n.NotificationID) AS NotificationsSent
-FROM HealthProvider hp
-JOIN HealthPoviderAppointments hpa ON hp.ProviderID = hpa.ProviderID
-JOIN Appointment a ON hpa.AppointmentID = a.AppointmentID
-JOIN Patient p ON a.PatientID = p.PatientID
-LEFT JOIN Notification n ON a.AppointmentID = n.AppointmentID
-GROUP BY hp.Name;
 
--- 3. Analyze the insurance status , the payment method, the total number of payments ,
---    the average payment amount , and the number of unique patients grouped by insurance status and payment method,
---   sorted by the total number of payments in descending order.
 
--- Frequency: Quarterly - For financial planning
-SELECT 
-	p.InsuranceStatus,
-	a.PaymentMethod,
-	COUNT(*) AS PaymentCount,
-	AVG(a.PaymentAmount) AS AvgPayment,
-	COUNT(DISTINCT p.PatientID) AS UniquePatients
-FROM Patient p
-JOIN Appointment a ON p.PatientID = a.PatientID
-GROUP BY p.InsuranceStatus, a.PaymentMethod
-ORDER BY PaymentCount DESC;
 
--- 4. Track the caregiver relationship, the number of distinct patients supported,
---    the total number of notifications received, and the number of distinct notification types grouped by caregiver relationship.
 
--- Frequency: Monthly - For support system analysis
-SELECT 
-	c.Relationship,
-	COUNT(DISTINCT c.PatientID) AS PatientsSupported,
-	COUNT(cn.NotificationID) AS NotificationsReceived,
-	COUNT(DISTINCT n.NotificationType) AS NotificationTypes
-FROM Caregiver c
-LEFT JOIN CaregiversNotifications cn ON c.PatientID = cn.PatientID 
-	AND c.Name = cn.Name 
-	AND c.Relationship = cn.Relationship
-LEFT JOIN Notification n ON cn.NotificationID = n.NotificationID
-GROUP BY c.Relationship;
 
--- 5. Analyze the bank name, the card type, the number of distinct cards issued, the number of transactions processed,
---    and the average transaction amount for bank cards used as payment methods (Credit or Debit), grouped by bank name and card type.
+		-- 2. Track the provider name, the total number of appointments, the average payment amount,
+		--    the number of unique patients, and the number of notifications sent for each health provider.
 
--- Frequency: Monthly - For payment system optimization
-SELECT 
-	c.BankName,
-	c.CardType,
-	COUNT(DISTINCT c.CardNumber) AS CardsIssued,
-	COUNT(DISTINCT a.AppointmentID) AS TransactionsProcessed,
-	AVG(a.PaymentAmount) AS AvgTransactionAmount
-FROM Card c
-JOIN Patient p ON c.PatientID = p.PatientID
-JOIN Appointment a ON p.PatientID = a.PatientID
-WHERE a.PaymentMethod IN ('Credit', 'Debit')
-GROUP BY c.BankName, c.CardType;
+		-- Frequency: Monthly - For performance evaluation
+		SELECT 
+			hp.Name AS ProviderName,
+			COUNT(a.AppointmentID) AS TotalAppointments,
+			AVG(a.PaymentAmount) AS AvgPaymentAmount,
+			COUNT(DISTINCT p.PatientID) AS UniquePatients,
+			COUNT(DISTINCT n.NotificationID) AS NotificationsSent
+		FROM HealthProvider hp
+		JOIN HealthPoviderAppointments hpa ON hp.ProviderID = hpa.ProviderID
+		JOIN Appointment a ON hpa.AppointmentID = a.AppointmentID
+		JOIN Patient p ON a.PatientID = p.PatientID
+		LEFT JOIN Notification n ON a.AppointmentID = n.AppointmentID
+		GROUP BY hp.Name;
 
--- 6. Track the type of incident, the number of distinct regulators who accessed records,
---    the number of distinct patients involved, and the number of distinct providers involved, grouped by the type of incident.
--- Frequency: Weekly - For security monitoring
-SELECT 
-	hr.TypeOfIncident,
-	COUNT(DISTINCT rar.RegulatorID) AS RegulatorsAccessed,
-	COUNT(DISTINCT hr.PatientID) AS PatientsInvolved,
-	COUNT(DISTINCT hr.ProviderID) AS ProvidersInvolved
-FROM HealthRecord hr
-LEFT JOIN Regulator_Access_HealthRecord rar ON hr.RecordID = rar.RecordID
-GROUP BY hr.TypeOfIncident;
 
--- 7.Identify the regulator ID and name for regulators who generate more reports than the average,
---   based on the number of reports generated by each regulator.
--- Frequency: Weekly - For resource optimization
-SELECT 
-	DATEPART(WEEKDAY, a.Time) AS DayOfWeek,
-	hp.Specialty,
-	COUNT(*) AS AppointmentCount,
-	AVG(a.PaymentAmount) AS AvgPayment,
-	COUNT(DISTINCT p.PatientID) AS UniquePatients
-FROM Appointment a
-JOIN Patient p ON a.PatientID = p.PatientID
-JOIN HealthPoviderAppointments hpa ON a.AppointmentID = hpa.AppointmentID
-JOIN HealthProvider hp ON hpa.ProviderID = hp.ProviderID
-GROUP BY DATEPART(WEEKDAY, a.Time), hp.Specialty
-ORDER BY DayOfWeek, AppointmentCount DESC;
 
--- 8. Identify the regulator ID and name for regulators who generate more reports than the average,
---    based on the number of reports generated by each regulator.
--- Frequency: Useful for identifying highly active regulators.
-SELECT RegulatorID, Name
-FROM GovernmentRegulator
-WHERE RegulatorID IN (
-	SELECT RegulatorID
-	FROM GovernmentRegulatorReports
-	GROUP BY RegulatorID
-	HAVING COUNT(ReportID) > (
-		SELECT AVG(report_count)
-		FROM (
-			SELECT RegulatorID, COUNT(ReportID) AS report_count
+
+
+
+
+		-- 3. Analyze the insurance status , the payment method, the total number of payments ,
+		--    the average payment amount , and the number of unique patients grouped by insurance status and payment method,
+		--   sorted by the total number of payments in descending order.
+
+		-- Frequency: Quarterly - For financial planning
+		SELECT 
+			p.InsuranceStatus,
+			a.PaymentMethod,
+			COUNT(*) AS PaymentCount,
+			AVG(a.PaymentAmount) AS AvgPayment,
+			COUNT(DISTINCT p.PatientID) AS UniquePatients
+		FROM Patient p
+		JOIN Appointment a ON p.PatientID = a.PatientID
+		GROUP BY p.InsuranceStatus, a.PaymentMethod
+		ORDER BY PaymentCount DESC;
+
+
+
+
+
+		-- 4. Track the caregiver relationship, the number of distinct patients supported,
+		--    the total number of notifications received, and the number of distinct notification types grouped by caregiver relationship.
+
+		-- Frequency: Monthly - For support system analysis
+		SELECT 
+			c.Relationship,
+			COUNT(DISTINCT cop.PatientID) AS PatientsSupported,
+			COUNT(cn.NotificationID) AS NotificationsReceived,
+			COUNT(DISTINCT n.NotificationType) AS NotificationTypes
+		FROM Caregiver c
+		LEFT JOIN CaregiversOfPatients cop 
+			ON c.Relationship = cop.Relationship 
+			AND c.Name = cop.Name
+		LEFT JOIN CaregiversNotifications cn 
+			ON cop.PatientID = cn.PatientID 
+			AND cop.Relationship = cn.Relationship
+			AND cop.Name = cn.Name
+		LEFT JOIN Notification n 
+			ON cn.NotificationID = n.NotificationID
+		GROUP BY c.Relationship;
+
+
+
+
+
+
+
+
+		-- 5. Analyze the bank name, the card type, the number of distinct cards issued, the number of transactions processed,
+		--    and the average transaction amount for bank cards used as payment methods (Credit or Debit), grouped by bank name and card type.
+
+		-- Frequency: Monthly - For payment system optimization
+		SELECT 
+			c.BankName,
+			c.CardType,
+			COUNT(DISTINCT c.CardNumber) AS CardsIssued,
+			COUNT(DISTINCT a.AppointmentID) AS TransactionsProcessed,
+			AVG(a.PaymentAmount) AS AvgTransactionAmount
+		FROM Card c
+		JOIN Patient p ON c.PatientID = p.PatientID
+		JOIN Appointment a ON p.PatientID = a.PatientID
+		WHERE a.PaymentMethod IN ('Credit', 'Debit')
+		GROUP BY c.BankName, c.CardType;
+
+
+
+
+
+		-- 6. Track the type of incident, the number of distinct regulators who accessed records,
+		--    the number of distinct patients involved, and the number of distinct providers involved, grouped by the type of incident.
+		-- Frequency: Weekly - For security monitoring
+		SELECT 
+			hr.TypeOfIncident,
+			COUNT(DISTINCT rar.RegulatorID) AS RegulatorsAccessed,
+			COUNT(DISTINCT hr.PatientID) AS PatientsInvolved,
+			COUNT(DISTINCT hr.ProviderID) AS ProvidersInvolved
+		FROM HealthRecord hr
+		LEFT JOIN Regulator_Access_HealthRecord rar ON hr.RecordID = rar.RecordID
+		GROUP BY hr.TypeOfIncident;
+
+
+
+
+		-- 7.Identify the regulator ID and name for regulators who generate more reports than the average,
+		--   based on the number of reports generated by each regulator.
+		-- Frequency: Weekly - For resource optimization
+		SELECT 
+			DATEPART(WEEKDAY, a.Time) AS DayOfWeek,
+			hp.Specialty,
+			COUNT(*) AS AppointmentCount,
+			AVG(a.PaymentAmount) AS AvgPayment,
+			COUNT(DISTINCT p.PatientID) AS UniquePatients
+		FROM Appointment a
+		JOIN Patient p ON a.PatientID = p.PatientID
+		JOIN HealthPoviderAppointments hpa ON a.AppointmentID = hpa.AppointmentID
+		JOIN HealthProvider hp ON hpa.ProviderID = hp.ProviderID
+		GROUP BY DATEPART(WEEKDAY, a.Time), hp.Specialty
+		ORDER BY DayOfWeek, AppointmentCount DESC;
+
+
+
+
+
+
+		-- 8. Identify the regulator ID and name for regulators who generate more reports than the average,
+		--    based on the number of reports generated by each regulator.
+		-- Frequency: Useful for identifying highly active regulators.
+		SELECT RegulatorID, Name
+		FROM GovernmentRegulator
+		WHERE RegulatorID IN (
+			SELECT RegulatorID
 			FROM GovernmentRegulatorReports
 			GROUP BY RegulatorID
-		) AS temp
-	)
-);
+			HAVING COUNT(ReportID) >= (
+				SELECT AVG(report_count)
+				FROM (
+					SELECT RegulatorID, COUNT(ReportID) AS report_count
+					FROM GovernmentRegulatorReports
+					GROUP BY RegulatorID
+				) AS temp
+			)
+		);
 
--- 9. Find the insurance company ID and company name for insurance companies that offer a higher number of distinct packages than the average, 
---    based on the number of distinct packages they provide.
--- Frequency: Common for competitive analysis.
-SELECT InsuranceID, CompanyName
-FROM InsuranceCompany
-WHERE InsuranceID IN (
-	SELECT InsuranceID
-	FROM InsuranceCompanyPackages
-	GROUP BY InsuranceID
-	HAVING COUNT(DISTINCT PackageID) > (
-		SELECT AVG(package_diversity)
-		FROM (
-			SELECT InsuranceID, COUNT(DISTINCT PackageID) AS package_diversity
+
+
+
+
+
+		-- 9. Find the insurance company ID and company name for insurance companies that offer a higher number of distinct packages than the average, 
+		--    based on the number of distinct packages they provide.
+		-- Frequency: Common for competitive analysis.
+		SELECT InsuranceID, CompanyName
+		FROM InsuranceCompany
+		WHERE InsuranceID IN (
+			SELECT InsuranceID
 			FROM InsuranceCompanyPackages
 			GROUP BY InsuranceID
-		) AS temp
-	)
-);
+			HAVING COUNT(DISTINCT PackageID) > (
+				SELECT AVG(package_diversity)
+				FROM (
+					SELECT InsuranceID, COUNT(DISTINCT PackageID) AS package_diversity
+					FROM InsuranceCompanyPackages
+					GROUP BY InsuranceID
+				) AS temp
+			)
+		);
 
--- 10. Retrieve the provider ID and name for health providers who handled more appointments than the average, based on the number of appointments they handled.
--- Frequency: Useful for workload distribution analysis.
-SELECT ProviderID, Name
-FROM HealthProvider
-WHERE ProviderID IN (
-	SELECT ProviderID
-	FROM HealthPoviderAppointments
-	GROUP BY ProviderID
-	HAVING COUNT(AppointmentID) > (
-		SELECT AVG(appointment_count)
-		FROM (
-			SELECT ProviderID, COUNT(AppointmentID) AS appointment_count
+
+
+
+
+		-- 10. Retrieve the provider ID and name for health providers who handled more appointments than the average, based on the number of appointments they handled.
+		-- Frequency: Useful for workload distribution analysis.
+		SELECT ProviderID, Name
+		FROM HealthProvider
+		WHERE ProviderID IN (
+			SELECT ProviderID
 			FROM HealthPoviderAppointments
 			GROUP BY ProviderID
-		) AS temp
-	)
-);
-
-
-
-
-
-
-
-
-
-
+			HAVING COUNT(AppointmentID) > (
+				SELECT AVG(appointment_count)
+				FROM (
+					SELECT ProviderID, COUNT(AppointmentID) AS appointment_count
+					FROM HealthPoviderAppointments
+					GROUP BY ProviderID
+				) AS temp
+			)
+		);
