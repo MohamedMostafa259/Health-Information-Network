@@ -44792,7 +44792,7 @@
 													"font": "Arial;13;0",
 													"parentStyle": true,
 													"left": -80,
-													"top": -880,
+													"top": -896,
 													"height": 13
 												},
 												{
@@ -44804,7 +44804,7 @@
 													"font": "Arial;13;1",
 													"parentStyle": true,
 													"left": 859,
-													"top": 412,
+													"top": 404,
 													"width": 171,
 													"height": 13,
 													"text": "Read Insurance Information"
@@ -44819,7 +44819,7 @@
 													"font": "Arial;13;0",
 													"parentStyle": true,
 													"left": -80,
-													"top": -880,
+													"top": -896,
 													"width": 133.63720703125,
 													"height": 13,
 													"text": "(from Subsystems)"
@@ -44834,7 +44834,7 @@
 													"font": "Arial;13;0",
 													"parentStyle": true,
 													"left": -80,
-													"top": -880,
+													"top": -896,
 													"height": 13,
 													"horizontalAlignment": 1
 												}
@@ -44842,7 +44842,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 854,
-											"top": 405,
+											"top": 397,
 											"width": 181.919921875,
 											"height": 25,
 											"stereotypeLabel": {
@@ -44871,7 +44871,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": -40,
-											"top": -440,
+											"top": -448,
 											"width": 10,
 											"height": 10
 										},
@@ -44888,7 +44888,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": -40,
-											"top": -440,
+											"top": -448,
 											"width": 10,
 											"height": 10
 										},
@@ -44905,7 +44905,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": -40,
-											"top": -440,
+											"top": -448,
 											"width": 10,
 											"height": 10
 										},
@@ -44922,7 +44922,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": -40,
-											"top": -440,
+											"top": -448,
 											"width": 10,
 											"height": 10
 										},
@@ -44939,7 +44939,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": -40,
-											"top": -440,
+											"top": -448,
 											"width": 10,
 											"height": 10
 										}
@@ -44948,7 +44948,7 @@
 									"parentStyle": false,
 									"containerChangeable": true,
 									"left": 816,
-									"top": 400,
+									"top": 392,
 									"width": 257,
 									"height": 35,
 									"nameCompartment": {
@@ -46721,7 +46721,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": false,
 											"left": 941,
-											"top": 355,
+											"top": 351,
 											"height": 13,
 											"alpha": 1.5707963267948966,
 											"distance": 15,
@@ -46742,7 +46742,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": false,
 											"left": 900,
-											"top": 351,
+											"top": 347,
 											"width": 53.49169921875,
 											"height": 13,
 											"alpha": 1.5707963267948966,
@@ -46766,7 +46766,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": false,
 											"left": 970,
-											"top": 362,
+											"top": 358,
 											"height": 13,
 											"alpha": -1.5707963267948966,
 											"distance": 15,
@@ -46785,7 +46785,7 @@
 										"$ref": "AAAAAAGTEuYRfOunxcU="
 									},
 									"lineStyle": 1,
-									"points": "948:399;964:332",
+									"points": "949:391;963:332",
 									"showVisibility": true,
 									"nameLabel": {
 										"$ref": "AAAAAAGTEuYRfOwAwCA="
