@@ -26,7 +26,7 @@
 					"_parent": {
 						"$ref": "AAAAAAFF+qBWK6M3Z8Y="
 					},
-					"name": "Collaboration1",
+					"name": "Account Generation",
 					"ownedElements": [
 						{
 							"_type": "UMLInteraction",
@@ -2040,7 +2040,7 @@
 					"_parent": {
 						"$ref": "AAAAAAFF+qBWK6M3Z8Y="
 					},
-					"name": "Collaboration2",
+					"name": "Appointment Management",
 					"ownedElements": [
 						{
 							"_type": "UMLInteraction",
@@ -4722,88 +4722,6 @@
 							},
 							"name": "Role2",
 							"type": ""
-						}
-					]
-				},
-				{
-					"_type": "UMLCollaboration",
-					"_id": "AAAAAAGTfwpnD3DXN/c=",
-					"_parent": {
-						"$ref": "AAAAAAFF+qBWK6M3Z8Y="
-					},
-					"name": "Collaboration3",
-					"ownedElements": [
-						{
-							"_type": "UMLInteraction",
-							"_id": "AAAAAAGTfwpnD3DY+VM=",
-							"_parent": {
-								"$ref": "AAAAAAGTfwpnD3DXN/c="
-							},
-							"name": "Interaction1",
-							"ownedElements": [
-								{
-									"_type": "UMLSequenceDiagram",
-									"_id": "AAAAAAGTfwpnD3DZeSU=",
-									"_parent": {
-										"$ref": "AAAAAAGTfwpnD3DY+VM="
-									},
-									"name": "Medical Report",
-									"ownedViews": [
-										{
-											"_type": "UMLFrameView",
-											"_id": "AAAAAAGTfwpnD3DaaSI=",
-											"_parent": {
-												"$ref": "AAAAAAGTfwpnD3DZeSU="
-											},
-											"model": {
-												"$ref": "AAAAAAGTfwpnD3DZeSU="
-											},
-											"subViews": [
-												{
-													"_type": "LabelView",
-													"_id": "AAAAAAGTfwpnD3Dbx2Y=",
-													"_parent": {
-														"$ref": "AAAAAAGTfwpnD3DaaSI="
-													},
-													"font": "Arial;13;0",
-													"parentStyle": true,
-													"left": 32.72998046875,
-													"top": 13,
-													"width": 87.42626953125,
-													"height": 13,
-													"text": "Medical Report"
-												},
-												{
-													"_type": "LabelView",
-													"_id": "AAAAAAGTfwpnD3DcgBc=",
-													"_parent": {
-														"$ref": "AAAAAAGTfwpnD3DaaSI="
-													},
-													"font": "Arial;13;1",
-													"parentStyle": true,
-													"left": 13,
-													"top": 13,
-													"width": 13.72998046875,
-													"height": 13,
-													"text": "sd"
-												}
-											],
-											"font": "Arial;13;0",
-											"parentStyle": false,
-											"left": 8,
-											"top": 8,
-											"width": 692,
-											"height": 592,
-											"nameLabel": {
-												"$ref": "AAAAAAGTfwpnD3Dbx2Y="
-											},
-											"frameTypeLabel": {
-												"$ref": "AAAAAAGTfwpnD3DcgBc="
-											}
-										}
-									]
-								}
-							]
 						}
 					]
 				}
