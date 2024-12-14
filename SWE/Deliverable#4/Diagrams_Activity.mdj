@@ -14256,7 +14256,8 @@
 							"_parent": {
 								"$ref": "AAAAAAGTEBHgpZippxo="
 							},
-							"name": "ssn"
+							"name": "ssn",
+							"type": ""
 						},
 						{
 							"_type": "UMLAttribute",
@@ -14264,7 +14265,8 @@
 							"_parent": {
 								"$ref": "AAAAAAGTEBHgpZippxo="
 							},
-							"name": "name"
+							"name": "name",
+							"type": ""
 						},
 						{
 							"_type": "UMLAttribute",
@@ -14281,7 +14283,8 @@
 							"_parent": {
 								"$ref": "AAAAAAGTEBHgpZippxo="
 							},
-							"name": "birthDate"
+							"name": "birthDate",
+							"type": ""
 						},
 						{
 							"_type": "UMLAttribute",
@@ -14422,7 +14425,8 @@
 							"_parent": {
 								"$ref": "AAAAAAGTEBH+D5jT9fQ="
 							},
-							"name": "departmentID"
+							"name": "departmentID",
+							"type": ""
 						},
 						{
 							"_type": "UMLAttribute",
@@ -14439,7 +14443,8 @@
 							"_parent": {
 								"$ref": "AAAAAAGTEBH+D5jT9fQ="
 							},
-							"name": "accessLevel"
+							"name": "accessLevel",
+							"type": ""
 						}
 					]
 				},
@@ -14881,7 +14886,8 @@
 							"_parent": {
 								"$ref": "AAAAAAGTEDjQCM56hKs="
 							},
-							"name": "organization"
+							"name": "organization",
+							"type": ""
 						}
 					]
 				},
@@ -16037,7 +16043,7 @@
 					"_parent": {
 						"$ref": "AAAAAAGS6Pi+G1jc5lI="
 					},
-					"name": "ClassDiagram1",
+					"name": "DesignClassDiagram1",
 					"ownedViews": [
 						{
 							"_type": "UMLClassView",
@@ -18383,7 +18389,8 @@
 									"_parent": {
 										"$ref": "AAAAAAGTwVwOmqSQf8U="
 									},
-									"name": "personSsn"
+									"name": "personSsn",
+									"type": ""
 								}
 							]
 						},
@@ -18562,7 +18569,8 @@
 									"_parent": {
 										"$ref": "AAAAAAGTwT3Vwm64DL0="
 									},
-									"name": "ssn"
+									"name": "ssn",
+									"type": ""
 								},
 								{
 									"_type": "UMLParameter",
@@ -18590,7 +18598,8 @@
 									"_parent": {
 										"$ref": "AAAAAAGTwWivnKTTy0E="
 									},
-									"name": "patientID"
+									"name": "patientID",
+									"type": ""
 								},
 								{
 									"_type": "UMLParameter",
@@ -18618,7 +18627,8 @@
 									"_parent": {
 										"$ref": "AAAAAAGTwWkjBqTefCw="
 									},
-									"name": "patientID"
+									"name": "patientID",
+									"type": ""
 								},
 								{
 									"_type": "UMLParameter",
@@ -18908,7 +18918,8 @@
 							"_parent": {
 								"$ref": "AAAAAAGTwYeKi8ENnds="
 							},
-							"name": "accessLevel"
+							"name": "accessLevel",
+							"type": ""
 						}
 					]
 				},
