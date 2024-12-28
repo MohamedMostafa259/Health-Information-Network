@@ -307,3 +307,13 @@ INSERT INTO CaregiversNotifications (Relationship, Name, NotificationID, Patient
 ('Child', 'Sophie Lee', 'NOT004', 'PAT004'),
 ('Spouse', 'Mark Davis', 'NOT005', 'PAT005');
 
+
+---
+
+
+SELECT * FROM Patient
+
+
+--INSERT INTO Patient (PatientID, Name, PhoneNo, NationalID, InsuranceStatus, Birthdate, Gender, Email, Age, InsuranceID, PackageID) VALUES
+--('PAT008', 'MOOHAMED', '12345678901', '12345678901237', 1, '1990-05-15', 'Female', 'alice@email.com', 33, 'INS001', 'P1')
+
