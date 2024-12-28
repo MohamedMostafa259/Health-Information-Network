@@ -26,7 +26,7 @@
 					"_parent": {
 						"$ref": "AAAAAAFF+qBWK6M3Z8Y="
 					},
-					"name": "Collaboration1",
+					"name": "communication diagram",
 					"ownedElements": [
 						{
 							"_type": "UMLInteraction",
@@ -42,7 +42,7 @@
 									"_parent": {
 										"$ref": "AAAAAAGUB8Oq9sDs0yo="
 									},
-									"name": "CommunicationDiagram1",
+									"name": "Appointment Management",
 									"ownedViews": [
 										{
 											"_type": "UMLFrameView",
@@ -63,9 +63,9 @@
 													"font": "Arial;13;0",
 													"left": 32.72998046875,
 													"top": 13,
-													"width": 146.6689453125,
+													"width": 152.4833984375,
 													"height": 13,
-													"text": "CommunicationDiagram1"
+													"text": "Appointment Management"
 												},
 												{
 													"_type": "LabelView",
