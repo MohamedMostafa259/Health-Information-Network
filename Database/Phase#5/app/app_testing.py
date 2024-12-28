@@ -1,15 +1,10 @@
-import io
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
-
-import numpy as np
+from tkinter import ttk, messagebox
 import pyodbc
 from datetime import datetime
-from reportlab.lib.units import inch
-from matplotlib import pyplot as plt
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.utils import ImageReader
-from reportlab.pdfgen import canvas
+import subprocess
+import platform
+import re
 
 
 class HealthNetworkApp:
@@ -17,68 +12,243 @@ class HealthNetworkApp:
         self.root = root
         self.root.title("Health Information Network Management System")
         self.root.geometry("1200x700")
-        
-        # Database connection
-        self.conn = self.connect_to_db()
-        
-        # Bind the close event
-        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        
-        # Main frame
+
+        # Initialize connection and cursor
+        self.conn = None
+        self.cursor = None
+
+        # Initialize other variables
+        self.current_table = None
+        self.entries = {}
+        self.update_entries = {}
+        self.delete_tree = None
+
+        # Create main frame
         self.main_frame = ttk.Frame(self.root, padding="10")
         self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
-        # Initialize UI
+
+        # Configure grid weights
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+
+        # Server selection components
+        self.server_var = tk.StringVar()
+        self.create_server_selection()
+
+        # Initialize table selection
         self.create_table_selection()
-        
-    def connect_to_db(self):
+
+        # Bind the close event
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def create_server_selection(self):
+        """Create the server selection interface"""
+        server_frame = ttk.LabelFrame(self.main_frame, text="Server Connection", padding="5")
+        server_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=5, pady=5)
+
+        ttk.Label(server_frame, text="Available Servers:").grid(row=0, column=0, sticky=tk.W, padx=5)
+
+        self.server_menu = ttk.OptionMenu(server_frame, self.server_var, "")
+        self.server_menu.grid(row=0, column=1, sticky=tk.W, padx=5)
+
+        ttk.Button(server_frame, text="Refresh", command=self.on_refresh).grid(row=0, column=2, padx=5)
+        ttk.Button(server_frame, text="Connect", command=self.on_connect).grid(row=0, column=3, padx=5)
+
+        # Initialize server list
+        self.on_refresh()
+
+    def list_sql_servers(self):
+        """
+        Lists available SQL Server instances using multiple detection methods.
+        Returns a list of server names.
+        """
+        servers = set()  # Use set to avoid duplicates
+
         try:
-            connection_string = (
-                r"Driver={SQL Server};"
-                # Change it based on your server name
-                r"Server=MOHAMED\MSSQLSERVER01;"  
-                r"Database=HIN;"
-                r"Trusted_Connection=yes;"
-            )
-            return pyodbc.connect(connection_string)
+            # Method 1: Try using pyodbc's built-in driver enumeration
+            drivers = [driver for driver in pyodbc.drivers() if 'SQL Server' in driver]
+            if drivers:
+                try:
+                    # Get local machine name
+                    local_machine = platform.node()
+                    servers.add(local_machine + "\\SQLEXPRESS")
+                    servers.add(local_machine)
+                    servers.add("localhost")
+                    servers.add("(local)")
+                except Exception as e:
+                    print(f"Error getting machine name: {e}")
+
+            # Method 2: Try using sqlcmd if available
+            # try:
+            #     result = subprocess.run(
+            #         ['sqlcmd', '-L'],
+            #         stdout=subprocess.PIPE,
+            #         stderr=subprocess.PIPE,
+            #         text=True,
+            #         timeout=5  # 5 second timeout
+            #     )
+            #     if result.returncode == 0:
+            #         # Parse sqlcmd output and add valid server names
+            #         for line in result.stdout.split('\n'):
+            #             line = line.strip()
+            #             # Match common SQL Server instance patterns
+            #             if re.match(r'^[\w\-]+\\[\w\-_]+$', line) or \
+            #                     re.match(r'^[\w\-]+$', line) or \
+            #                     '\\' in line or \
+            #                     line.lower() in ['localhost', '(local)']:
+            #                 servers.add(line)
+            # except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError) as e:
+            #     print(f"sqlcmd error: {e}")
+
+            # Method 3: Try registry lookup (Windows only)
+            if platform.system() == 'Windows':
+                try:
+                    import winreg
+                    path = r"SOFTWARE\Microsoft\Microsoft SQL Server"
+                    try:
+                        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path)
+                        for i in range(winreg.QueryInfoKey(reg_key)[0]):
+                            try:
+                                instance_path = winreg.EnumKey(reg_key, i)
+                                if instance_path.startswith('MSSQL'):
+                                    # Extract instance name from registry
+                                    instance_key = winreg.OpenKey(reg_key,
+                                                                  instance_path + "\\MSSQLServer\\SuperSocketNetLib\\Tcp")
+                                    instance_name = winreg.QueryValueEx(instance_key, 'TcpPort')[0]
+                                    if instance_name:
+                                        servers.add(f"{local_machine}\\{instance_name}")
+                            except WindowsError:
+                                continue
+                    except WindowsError as e:
+                        print(f"Registry error: {e}")
+                except ImportError:
+                    print("Failed to import winreg module")
+
+            # Convert set to sorted list
+            server_list = sorted(list(servers))
+
+            # Validate servers are accessible
+            validated_servers = []
+            for server in server_list:
+                try:
+                    # Attempt a quick connection to verify server exists
+                    conn_str = f"Driver={{SQL Server}};Server={server};Trusted_Connection=yes;Connection Timeout=3;"
+                    conn = pyodbc.connect(conn_str, timeout=3)
+                    conn.close()
+                    validated_servers.append(server)
+                except pyodbc.Error:
+                    continue  # Skip servers that can't be connected to
+
+            if not validated_servers:
+                # If no servers were validated, add some default options
+                validated_servers = ["localhost", "(local)", "localhost\\SQLEXPRESS"]
+
+            return validated_servers
+
         except Exception as e:
-            messagebox.showerror("Database Error", f"Error connecting to database: {e}")
-            return None
+            messagebox.showerror("Error", f"Error detecting SQL Servers: {e}")
+            return ["localhost", "(local)", "localhost\\SQLEXPRESS"]  # Return default options on error
+
+    def on_refresh(self):
+        """Refresh server list"""
+        servers = self.list_sql_servers()
+        menu = self.server_menu['menu']
+        menu.delete(0, 'end')
+
+        if servers:
+            for server in servers:
+                menu.add_command(label=server,
+                                 command=lambda s=server: self.server_var.set(s))
+            self.server_var.set(servers[0])
+        else:
+            self.server_var.set("")
+            messagebox.showinfo("No Servers", "No SQL Server instances found")
+
+    def on_connect(self):
+        """Handle server connection"""
+        server = self.server_var.get()
+        if not server:
+            messagebox.showwarning("No Selection", "Please select a server")
+            return
+
+        try:
+            # Close existing connection and cursor
+            self.close_cursor()
+            if self.conn:
+                self.conn.close()
+
+            connection_string = (
+                f"Driver={{SQL Server}};"
+                f"Server={server};"
+                f"Database=HIN;"
+                f"Trusted_Connection=yes;"
+            )
+            self.conn = pyodbc.connect(connection_string)
+
+            # Create initial cursor
+            if self.create_cursor():
+                messagebox.showinfo("Success", f"Connected to {server}")
+                self.create_table_selection()
+            else:
+                raise Exception("Failed to create cursor")
+
+        except Exception as e:
+            messagebox.showerror("Connection Error", f"Failed to connect: {e}")
+
+    def create_table_selection(self):
+        """Create the table selection interface"""
+        self.clear_frame()
+
+        table_frame = ttk.LabelFrame(self.main_frame, text="Select Table", padding="10")
+        table_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), padx=5, pady=5)
+
+        for i, table in enumerate(["Patient", "HealthProvider"]):
+            ttk.Button(table_frame,
+                       text=f"Table {i + 1}: {table}",
+                       command=lambda t=table: self.show_operations_menu(t)
+                       ).grid(row=i, column=0, pady=5, padx=5, sticky=(tk.W, tk.E))
+
+    def show_operations_menu(self, table_name):
+        """Show operations menu for selected table"""
+        self.clear_frame()
+        self.current_table = table_name
+
+        ops_frame = ttk.LabelFrame(self.main_frame, text=f"Operations for {table_name}", padding="10")
+        ops_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), padx=5, pady=5)
+
+        operations = [
+            ("Select", self.show_select_options),
+            ("Insert", self.show_insert_form),
+            ("Update", self.show_update_form),
+            ("Delete", self.show_delete_form)
+        ]
+
+        for i, (op_name, op_func) in enumerate(operations):
+            ttk.Button(ops_frame,
+                       text=f"Option {i + 1}: {op_name}",
+                       command=op_func
+                       ).grid(row=i, column=0, pady=5, padx=5, sticky=(tk.W, tk.E))
+
+        ttk.Button(ops_frame,
+                   text="Back",
+                   command=self.create_table_selection
+                   ).grid(row=len(operations), column=0, pady=20, sticky=(tk.W, tk.E))
 
     def close_db_connection(self):
+        """Close database connection and cursor"""
+        self.close_cursor()
         try:
             if self.conn:
-                cursor = self.conn.cursor()
-                cursor.close()
                 self.conn.close()
-                print("Database connection closed.")
+                self.conn = None
+                print("Database connection closed")
         except Exception as e:
-            print(f"Error closing database connection: {e}")
+            print(f"Error closing connection: {e}")
     
     def on_closing(self):
-        """Method called when the window is being closed."""
+        """Handle application closing"""
         self.close_db_connection()
         self.root.destroy()
-
-    def get_all_tables(self):
-        """Fetch all table names from the database."""
-        tables = []
-        try:
-            cursor = self.conn.cursor()
-            # Query to get all user tables from the database
-            cursor.execute("""
-                SELECT TABLE_NAME 
-                FROM INFORMATION_SCHEMA.TABLES 
-                WHERE TABLE_TYPE = 'BASE TABLE' 
-                AND TABLE_SCHEMA = 'dbo'
-            """)
-            tables = [row[0] for row in cursor.fetchall()]
-        except Exception as e:
-            messagebox.showerror("Error", f"Error fetching tables: {e}")
-        finally:
-            if cursor:
-                cursor.close()
-        return tables
 
     def create_table_selection(self):
         self.clear_frame()
@@ -92,25 +262,6 @@ class HealthNetworkApp:
         ttk.Button(table_frame, text="Table 2: HealthProvider", 
                   command=lambda: self.show_operations_menu("HealthProvider")).grid(row=1, column=0, pady=5)
 
-    def show_operations_menu(self, table_name):
-        self.clear_frame()
-        self.current_table = table_name
-        
-        # Operations frame
-        ops_frame = ttk.LabelFrame(self.main_frame, text=f"Operations for {table_name}", padding="10")
-        ops_frame.grid(row=0, column=0, padx=5, pady=5)
-        
-        ttk.Button(ops_frame, text="Option 1: Select", 
-                  command=lambda: self.show_select_options()).grid(row=0, column=0, pady=5)
-        ttk.Button(ops_frame, text="Option 2: Insert", 
-                  command=self.show_insert_form).grid(row=1, column=0, pady=5)
-        ttk.Button(ops_frame, text="Option 3: Update", 
-                  command=self.show_update_form).grid(row=2, column=0, pady=5)
-        ttk.Button(ops_frame, text="Option 4: Delete", 
-                  command=self.show_delete_form).grid(row=3, column=0, pady=5)
-        
-        ttk.Button(ops_frame, text="Back", 
-                  command=self.create_table_selection).grid(row=4, column=0, pady=20)
 
     def show_select_options(self):
         self.clear_frame()
@@ -127,46 +278,44 @@ class HealthNetworkApp:
         ttk.Button(select_frame, text="Back", 
                   command=lambda: self.show_operations_menu(self.current_table)).grid(row=3, column=0, pady=20)
 
-    def perform_simple_select(self):
-        self.clear_frame()
-        
-        results_frame = ttk.LabelFrame(self.main_frame, text=f"{self.current_table} Records", padding="10")
-        results_frame.grid(row=0, column=0, padx=5, pady=5)
-        
-        # Create Treeview
-        columns = self.get_table_columns()
-        tree = ttk.Treeview(results_frame, columns=columns, show="headings", height=15)
-        
-        # Set column headings
+    def configure_treeview(self, parent, columns):
+        tree = ttk.Treeview(parent, columns=columns, show="headings", height=15)
         for col in columns:
             tree.heading(col, text=col)
-            tree.column(col, width=100)
-        
-        # Fetch and display data
-        cursor = None
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute(f"SELECT * FROM {self.current_table}")
-            for row in cursor.fetchall():
-                tree.insert("", tk.END, values=list(row))
-        except Exception as e:
-            messagebox.showerror("Error", f"Error fetching records: {e}")
-        finally:
-            if cursor:
-                cursor.close()
-        
-        # Add scrollbars
-        y_scrollbar = ttk.Scrollbar(results_frame, orient="vertical", command=tree.yview)
-        x_scrollbar = ttk.Scrollbar(results_frame, orient="horizontal", command=tree.xview)
+            tree.column(col, width=120)
+
+        y_scrollbar = ttk.Scrollbar(parent, orient="vertical", command=tree.yview)
+        x_scrollbar = ttk.Scrollbar(parent, orient="horizontal", command=tree.xview)
         tree.configure(yscrollcommand=y_scrollbar.set, xscrollcommand=x_scrollbar.set)
-        
-        # Grid layout
+
         tree.grid(row=0, column=0, sticky="nsew")
         y_scrollbar.grid(row=0, column=1, sticky="ns")
         x_scrollbar.grid(row=1, column=0, sticky="ew")
-        
-        ttk.Button(results_frame, text="Back", 
-                  command=self.show_select_options).grid(row=2, column=0, columnspan=2, pady=20)
+        return tree
+
+    def perform_simple_select(self):
+        self.clear_frame()
+
+        results_frame = ttk.LabelFrame(self.main_frame, text=f"{self.current_table} Records", padding="10")
+        results_frame.grid(row=0, column=0, padx=5, pady=5)
+
+        # Create Treeview
+        columns = self.get_table_columns()
+        tree = self.configure_treeview(results_frame, columns)
+
+        # Execute query
+        cursor = self.execute_query(f"SELECT * FROM {self.current_table}")
+        if cursor:
+            try:
+                for row in cursor.fetchall():
+                    tree.insert("", tk.END, values=list(row))
+            except Exception as e:
+                messagebox.showerror("Error", f"Error fetching records: {e}")
+            finally:
+                self.close_cursor()
+
+        ttk.Button(results_frame, text="Back",
+                   command=self.show_select_options).grid(row=2, column=0, pady=20)
 
     def perform_join_select(self):
         self.clear_frame()
@@ -203,7 +352,7 @@ class HealthNetworkApp:
         
             # Create Treeview
             columns = [column[0] for column in cursor.description]
-            tree = ttk.Treeview(join_frame, columns=columns, show="headings", height=15)
+            tree = self.configure_treeview(join_frame, columns)
         
             # Set column headings
             for col in columns:
@@ -255,7 +404,7 @@ class HealthNetworkApp:
                     COUNT(*) as TotalProviders,
                     COUNT(DISTINCT Specialty) as UniqueSpecialties,
                     COUNT(DISTINCT ProviderID) as ActiveProviders,
-                    (SELECT COUNT(*) FROM HealthPoviderAppointments) as TotalAppointments
+                    (SELECT COUNT(*) FROM HealthProviderAppointments) as TotalAppointments
                 FROM HealthProvider
             """
         
@@ -277,6 +426,22 @@ class HealthNetworkApp:
         
         if cursor:
             cursor.close()
+
+    def execute_query(self, query, params=None):
+        """Execute a query with proper cursor management"""
+        try:
+            if not self.create_cursor():
+                raise Exception("No database connection")
+
+            if params:
+                self.cursor.execute(query, params)
+            else:
+                self.cursor.execute(query)
+
+            return self.cursor
+        except Exception as e:
+            messagebox.showerror("Query Error", f"Error executing query: {e}")
+            return None
 
     def show_insert_form(self):
         self.clear_frame()
@@ -300,20 +465,44 @@ class HealthNetworkApp:
         values = [self.entries[column].get() for column in self.entries]
         columns = ", ".join(self.entries.keys())
         placeholders = ", ".join(["?" for _ in values])
-        
+
+        query = f"INSERT INTO {self.current_table} ({columns}) VALUES ({placeholders})"
+
+        cursor = self.execute_query(query, values)
+        if cursor:
+            try:
+                self.conn.commit()
+                messagebox.showinfo("Success", "Record inserted successfully!")
+                # Clear entries after successful insert
+                for entry in self.entries.values():
+                    entry.delete(0, tk.END)
+            except Exception as e:
+                self.conn.rollback()
+                messagebox.showerror("Error", f"Error inserting record: {e}")
+            finally:
+                self.close_cursor()
+
+    def create_cursor(self):
+        """Create a new cursor if connection exists"""
         try:
-            cursor = self.conn.cursor()
-            cursor.execute(f"INSERT INTO {self.current_table} ({columns}) VALUES ({placeholders})", values)
-            self.conn.commit()
-            messagebox.showinfo("Success", "Record inserted successfully!")
-            # Clear entries after successful insert
-            for entry in self.entries.values():
-                entry.delete(0, tk.END)
+            if self.conn:
+                if self.cursor:
+                    self.cursor.close()
+                self.cursor = self.conn.cursor()
+                return True
+            return False
         except Exception as e:
-            messagebox.showerror("Error", f"Error inserting record: {e}")
-        finally:
-            if cursor:
-                cursor.close()
+            messagebox.showerror("Error", f"Failed to create cursor: {e}")
+            return False
+
+    def close_cursor(self):
+        """Safely close the cursor"""
+        try:
+            if self.cursor:
+                self.cursor.close()
+                self.cursor = None
+        except Exception as e:
+            print(f"Error closing cursor: {e}")
 
     def show_update_form(self):
         self.clear_frame()
@@ -412,7 +601,7 @@ class HealthNetworkApp:
         
         # Create Treeview to show the record to be deleted
         columns = self.get_table_columns()
-        self.delete_tree = ttk.Treeview(delete_frame, columns=columns, show="headings", height=5)
+        self.delete_tree = self.configure_treeview(delete_frame, columns)
         
         # Set column headings
         for col in columns:
@@ -515,307 +704,6 @@ class HealthNetworkApp:
     def clear_frame(self):
         for widget in self.main_frame.winfo_children():
             widget.destroy()
-
-    def generate_report(self):
-        self.clear_frame()
-
-        report_frame = ttk.LabelFrame(self.main_frame, text=f"Report for {self.current_table}", padding="10")
-        report_frame.grid(row=0, column=0, padx=5, pady=5)
-
-        try:
-            cursor = self.conn.cursor()
-            report_data = []
-            column_names = []
-            report_title = f"{self.current_table} Analysis Report"
-
-            # Get basic statistics for any table
-            cursor.execute(f"""
-                SELECT 
-                    COUNT(*) as TotalRecords,
-                    COUNT(DISTINCT {self.get_table_columns()[0]}) as UniqueIDs
-                FROM {self.current_table}
-            """)
-            basic_stats = cursor.fetchone()
-            report_data.extend([basic_stats[0], basic_stats[1]])
-            column_names.extend(['Total Records', 'Unique IDs'])
-
-            # Add table-specific statistics
-            if self.current_table == "Patient":
-                cursor.execute("""
-                    SELECT 
-                        COUNT(CASE WHEN InsuranceStatus = 1 THEN 1 END) as InsuredPatients,
-                        COUNT(CASE WHEN InsuranceStatus = 0 THEN 1 END) as UninsuredPatients,
-                        AVG(Age) as AverageAge,
-                        COUNT(DISTINCT InsuranceID) as UniqueInsuranceProviders
-                    FROM Patient
-                """)
-                stats = cursor.fetchone()
-                report_data.extend([stats[0], stats[1], stats[2], stats[3]])
-                column_names.extend([
-                    'Insured Patients',
-                    'Uninsured Patients',
-                    'Average Age',
-                    'Unique Insurance Providers'
-                ])
-            elif self.current_table == "HealthProvider":
-                cursor.execute("""
-                    SELECT 
-                        COUNT(DISTINCT Specialty) as UniqueSpecialties,
-                        COUNT(CASE WHEN Availability = 1 THEN 1 END) as AvailableProviders
-                    FROM HealthProvider
-                """)
-                stats = cursor.fetchone()
-                report_data.extend([stats[0], stats[1]])
-                column_names.extend(['Unique Specialties', 'Available Providers'])
-
-            # Display report in text widget
-            report_text = tk.Text(report_frame, height=15, width=60)
-            report_text.insert(tk.END, f"Report Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-
-            for name, value in zip(column_names, report_data):
-                if isinstance(value, float):
-                    report_text.insert(tk.END, f"{name}: {value:.2f}\n")
-                else:
-                    report_text.insert(tk.END, f"{name}: {value}\n")
-
-            report_text.config(state='disabled')
-            report_text.grid(row=0, column=0, padx=5, pady=5)
-
-            # Add Export to PDF button
-            def export_to_pdf():
-                file_path = filedialog.asksaveasfilename(
-                    defaultextension=".pdf",
-                    filetypes=[("PDF files", "*.pdf")],
-                    initialfile=f"{self.current_table}_report.pdf"
-                )
-                if file_path:
-                    self.generate_pdf_report(report_title, report_data, column_names, file_path)
-
-            button_frame = ttk.Frame(report_frame)
-            button_frame.grid(row=1, column=0, pady=10)
-
-            ttk.Button(button_frame, text="Export to PDF",
-                       command=export_to_pdf).grid(row=0, column=0, padx=5)
-            ttk.Button(button_frame, text="Back",
-                       command=self.show_select_options).grid(row=0, column=1, padx=5)
-
-        except Exception as e:
-            messagebox.showerror("Error", f"Error generating report: {e}")
-        finally:
-            if cursor:
-                cursor.close()
-
-    def generate_pdf_report(self, report_title, report_data, column_names, output_file_path):
-        """Generate and save a PDF report with charts."""
-        try:
-            # Create the PDF canvas
-            c = canvas.Canvas(output_file_path, pagesize=letter)
-            c.setFont("Helvetica-Bold", 16)
-
-            # Add title
-            c.drawString(100, 750, report_title)
-
-            # Add timestamp
-            c.setFont("Helvetica", 12)
-            c.drawString(100, 730, f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-
-            # Add line separator
-            c.line(100, 720, 500, 720)
-
-            # Write the report data
-            y = 700
-            for col, value in zip(column_names, report_data):
-                if isinstance(value, float):
-                    formatted_value = f"{value:.2f}"
-                else:
-                    formatted_value = str(value)
-                c.drawString(100, y, f"{col}: {formatted_value}")
-                y -= 20
-
-            # Generate and add charts based on table type
-            if self.current_table == "Patient":
-                # Create pie chart for insurance status
-                self.add_insurance_status_chart(c, report_data, column_names)
-
-                # Create bar chart for age distribution
-                self.add_age_distribution_chart(c)
-
-            elif self.current_table == "HealthProvider":
-                # Create pie chart for specialties distribution
-                self.add_specialty_distribution_chart(c)
-
-                # Create bar chart for provider availability
-                self.add_provider_availability_chart(c)
-
-            # Save the PDF
-            c.save()
-            messagebox.showinfo("Success", f"Report saved successfully to:\n{output_file_path}")
-
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to create PDF: {e}")
-
-    def add_insurance_status_chart(self, pdf_canvas, report_data, column_names):
-        """Add insurance status pie chart to PDF."""
-        try:
-            # Get insurance data from report_data
-            insured_idx = column_names.index('Insured Patients')
-            uninsured_idx = column_names.index('Uninsured Patients')
-
-            insured = report_data[insured_idx]
-            uninsured = report_data[uninsured_idx]
-
-            # Create pie chart
-            plt.figure(figsize=(6, 4))
-            plt.pie([insured, uninsured],
-                    labels=['Insured', 'Uninsured'],
-                    autopct='%1.1f%%',
-                    colors=['lightblue', 'lightcoral'])
-            plt.title('Insurance Status Distribution')
-
-            # Save chart to bytes buffer
-            buf = io.BytesIO()
-            plt.savefig(buf, format='png', bbox_inches='tight')
-            plt.close()
-
-            # Add chart to PDF
-            buf.seek(0)
-            img = ImageReader(buf)
-            pdf_canvas.drawImage(img, 100, 400, width=4 * inch, height=3 * inch)
-
-        except Exception as e:
-            print(f"Error creating insurance status chart: {e}")
-
-    def add_age_distribution_chart(self, pdf_canvas):
-        """Add age distribution chart to PDF."""
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute("""
-                SELECT 
-                    CASE 
-                        WHEN Age < 18 THEN '0-17'
-                        WHEN Age BETWEEN 18 AND 30 THEN '18-30'
-                        WHEN Age BETWEEN 31 AND 50 THEN '31-50'
-                        WHEN Age BETWEEN 51 AND 70 THEN '51-70'
-                        ELSE '70+'
-                    END as AgeGroup,
-                    COUNT(*) as Count
-                FROM Patient
-                GROUP BY 
-                    CASE 
-                        WHEN Age < 18 THEN '0-17'
-                        WHEN Age BETWEEN 18 AND 30 THEN '18-30'
-                        WHEN Age BETWEEN 31 AND 50 THEN '31-50'
-                        WHEN Age BETWEEN 51 AND 70 THEN '51-70'
-                        ELSE '70+'
-                    END
-                ORDER BY AgeGroup
-            """)
-
-            age_groups, counts = zip(*cursor.fetchall())
-
-            plt.figure(figsize=(6, 4))
-            plt.bar(age_groups, counts, color='skyblue')
-            plt.title('Age Distribution')
-            plt.xlabel('Age Groups')
-            plt.ylabel('Number of Patients')
-            plt.xticks(rotation=45)
-
-            # Save chart to bytes buffer
-            buf = io.BytesIO()
-            plt.savefig(buf, format='png', bbox_inches='tight')
-            plt.close()
-
-            # Add chart to PDF
-            buf.seek(0)
-            img = ImageReader(buf)
-            pdf_canvas.drawImage(img, 100, 100, width=4 * inch, height=3 * inch)
-
-        except Exception as e:
-            print(f"Error creating age distribution chart: {e}")
-        finally:
-            if cursor:
-                cursor.close()
-
-    def add_specialty_distribution_chart(self, pdf_canvas):
-        """Add specialty distribution chart to PDF."""
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute("""
-                SELECT Specialty, COUNT(*) as Count
-                FROM HealthProvider
-                GROUP BY Specialty
-                ORDER BY Count DESC
-            """)
-
-            specialties, counts = zip(*cursor.fetchall())
-
-            plt.figure(figsize=(6, 4))
-            plt.pie(counts, labels=specialties, autopct='%1.1f%%')
-            plt.title('Provider Specialty Distribution')
-
-            # Save chart to bytes buffer
-            buf = io.BytesIO()
-            plt.savefig(buf, format='png', bbox_inches='tight')
-            plt.close()
-
-            # Add chart to PDF
-            buf.seek(0)
-            img = ImageReader(buf)
-            pdf_canvas.drawImage(img, 100, 400, width=4 * inch, height=3 * inch)
-
-        except Exception as e:
-            print(f"Error creating specialty distribution chart: {e}")
-        finally:
-            if cursor:
-                cursor.close()
-
-    def add_provider_availability_chart(self, pdf_canvas):
-        """Add provider availability chart to PDF."""
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute("""
-                SELECT 
-                    Specialty,
-                    SUM(CASE WHEN Availability = 1 THEN 1 ELSE 0 END) as Available,
-                    SUM(CASE WHEN Availability = 0 THEN 1 ELSE 0 END) as Unavailable
-                FROM HealthProvider
-                GROUP BY Specialty
-            """)
-
-            data = cursor.fetchall()
-            specialties = [row[0] for row in data]
-            available = [row[1] for row in data]
-            unavailable = [row[2] for row in data]
-
-            x = np.arange(len(specialties))
-            width = 0.35
-
-            plt.figure(figsize=(8, 4))
-            plt.bar(x - width / 2, available, width, label='Available', color='lightgreen')
-            plt.bar(x + width / 2, unavailable, width, label='Unavailable', color='lightcoral')
-
-            plt.xlabel('Specialty')
-            plt.ylabel('Number of Providers')
-            plt.title('Provider Availability by Specialty')
-            plt.xticks(x, specialties, rotation=45)
-            plt.legend()
-            plt.tight_layout()
-
-            # Save chart to bytes buffer
-            buf = io.BytesIO()
-            plt.savefig(buf, format='png', bbox_inches='tight')
-            plt.close()
-
-            # Add chart to PDF
-            buf.seek(0)
-            img = ImageReader(buf)
-            pdf_canvas.drawImage(img, 100, 100, width=4 * inch, height=3 * inch)
-
-        except Exception as e:
-            print(f"Error creating provider availability chart: {e}")
-        finally:
-            if cursor:
-                cursor.close()
 
 if __name__ == "__main__":
     root = tk.Tk()
