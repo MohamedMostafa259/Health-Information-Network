@@ -36,10 +36,11 @@ class HealthNetworkApp:
             connection_string = (
                 r"Driver={SQL Server};"
                 # Change it based on your server name
-                r"Server=MOHAMED\MSSQLSERVER01;"  
+                r"Server=MOHAMED\MSSQLSERVER01;"  # For M.M.M → r"Server=Mohamed_Mostafa\SQLEXPRESS;" 
                 r"Database=HIN;"
                 r"Trusted_Connection=yes;"
             )
+
             return pyodbc.connect(connection_string)
         except Exception as e:
             messagebox.showerror("Database Error", f"Error connecting to database: {e}")
