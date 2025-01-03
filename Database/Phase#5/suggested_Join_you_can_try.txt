@@ -1,0 +1,8 @@
+SELECT * 
+FROM Patient 
+INNER JOIN Appointment
+ON Patient.PatientID = Appointment.PatientID
+INNER JOIN HealthPoviderAppointments 
+ON Appointment.AppointmentID = HealthPoviderAppointments.AppointmentID
+INNER JOIN HealthProvider 
+ON HealthPoviderAppointments.ProviderID = HealthProvider.ProviderID
