@@ -62,9 +62,9 @@
 													},
 													"font": "Arial;13;0",
 													"parentStyle": true,
-													"left": 120.72998046875,
+													"left": 118.55908203125,
 													"top": 5,
-													"width": 114.9052734375,
+													"width": 105.041015625,
 													"height": 13,
 													"text": "Account Generation"
 												},
@@ -78,7 +78,7 @@
 													"parentStyle": true,
 													"left": 101,
 													"top": 5,
-													"width": 13.72998046875,
+													"width": 11.55908203125,
 													"height": 13,
 													"text": "sd"
 												}
@@ -1058,9 +1058,9 @@
 													},
 													"font": "Arial;13;0",
 													"parentStyle": true,
-													"left": 191.9599609375,
+													"left": 188.3291015625,
 													"top": 349,
-													"width": 22.876953125,
+													"width": 24.07666015625,
 													"height": 13,
 													"text": "ALT"
 												},
@@ -1074,7 +1074,7 @@
 													"parentStyle": true,
 													"left": 165,
 													"top": 349,
-													"width": 20.9599609375,
+													"width": 17.3291015625,
 													"height": 13,
 													"text": "seq"
 												},
@@ -1199,9 +1199,9 @@
 													},
 													"font": "Arial;13;0",
 													"parentStyle": true,
-													"left": 191.9599609375,
+													"left": 188.3291015625,
 													"top": 173,
-													"width": 26.7236328125,
+													"width": 24.55908203125,
 													"height": 13,
 													"text": "OPT"
 												},
@@ -1215,7 +1215,7 @@
 													"parentStyle": true,
 													"left": 165,
 													"top": 173,
-													"width": 20.9599609375,
+													"width": 17.3291015625,
 													"height": 13,
 													"text": "seq"
 												},
@@ -2381,7 +2381,7 @@
 														"$ref": "AAAAAAGTdED4Ey3hbhU="
 													},
 													"edgePosition": 1,
-													"text": "1 : requestAppointment(date, typeOfIllness)"
+													"text": "1 : requestAppointment(emergencyStatus, time, typeOfIllness)"
 												},
 												{
 													"_type": "EdgeLabelView",
@@ -2487,9 +2487,9 @@
 													},
 													"font": "Arial;13;0",
 													"parentStyle": false,
-													"left": 205,
+													"left": 180,
 													"top": 133,
-													"width": 275.310546875,
+													"width": 325.15234375,
 													"height": 13,
 													"alpha": 1.5707963267948966,
 													"distance": 10,
@@ -2497,7 +2497,7 @@
 														"$ref": "AAAAAAGTdEKAxS34P28="
 													},
 													"edgePosition": 1,
-													"text": "2 : appointmentID, emergencyStatus, date, time"
+													"text": "2 : appointmentID, emergencyStatus, time, typeOfIllness"
 												},
 												{
 													"_type": "EdgeLabelView",
@@ -4406,7 +4406,7 @@
 									"target": {
 										"$ref": "AAAAAAGTdEBNqC3BlEk="
 									},
-									"arguments": "date, typeOfIllness"
+									"arguments": "emergencyStatus, time, typeOfIllness"
 								},
 								{
 									"_type": "UMLMessage",
@@ -4414,7 +4414,7 @@
 									"_parent": {
 										"$ref": "AAAAAAGTdDyCPi2Qbq8="
 									},
-									"name": "appointmentID, emergencyStatus, date, time",
+									"name": "appointmentID, emergencyStatus, time, typeOfIllness",
 									"source": {
 										"$ref": "AAAAAAGTdEBNqC3BlEk="
 									},
