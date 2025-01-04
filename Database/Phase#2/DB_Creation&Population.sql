@@ -187,6 +187,33 @@ INSERT INTO HealthProvider (ProviderID, Availability, Specialty, Name) VALUES
 ('HP003', '08 am To 04 pm', 'Orthopedics', 'Dr. James Wilson'),
 ('HP004', '11 am To 07 pm', 'Dermatology', 'Dr. Emily Rodriguez'),
 ('HP005', '09 am To 05 pm', 'Neurology', 'Dr. David Kim');
+-----
+INSERT INTO HealthProvider (ProviderID, Availability, Specialty, Name) VALUES
+('HP006', '09 am To 05 pm', 'Cardiology', 'Dr. Laura Smith'),
+('HP007', '10 am To 06 pm', 'Pediatrics', 'Dr. Robert Brown'),
+('HP008', '08 am To 04 pm', 'Orthopedics', 'Dr. Linda Davis'),
+('HP009', '11 am To 07 pm', 'Dermatology', 'Dr. William Martinez'),
+('HP010', '09 am To 05 pm', 'Pediatrics', 'Dr. Barbara Garcia'),
+('HP011', '10 am To 06 pm', 'Cardiology', 'Dr. Richard Lee'),
+('HP012', '08 pm To 04 pm', 'Pediatrics', 'Dr. Patricia Taylor'),
+('HP013', '11 am To 07 pm', 'Orthopedics', 'Dr. Christopher Harris'),
+('HP014', '09 am To 05 pm', 'Cardiology', 'Dr. Jessica Clark'),
+('HP015', '10 am To 06 pm', 'Neurology', 'Dr. Daniel Lewis'),
+('HP016', '08 am To 04 pm', 'Cardiology', 'Dr. Karen Walker'),
+('HP017', '11 pm To 07 pm', 'Pediatrics', 'Dr. Mark Hall'),
+('HP018', '09 am To 05 pm', 'Orthopedics', 'Dr. Nancy Allen'),
+('HP019', '10 am To 06 pm', 'Orthopedics', 'Dr. Steven Young'),
+('HP020', '08 am To 04 pm', 'Pediatrics', 'Dr. Susan King');
+-----
+
+--DELETE FROM HealthProvider WHERE ProviderID IN ('HP006', 'HP007', 'HP008', 'HP009', 'HP010', 'HP011', 'HP012', 'HP013',
+--'HP014', 'HP015', 'HP016', 'HP017', 'HP018', 'HP019', 'HP020');
+
+--UPDATE HealthProvider SET Availability = '09 am To 12 pm' WHERE Availability = '09 am To 05 pm';
+--UPDATE HealthProvider SET Availability = '12 pm To 03 pm' WHERE Availability = '10 am To 06 pm';
+--UPDATE HealthProvider SET Availability = '03 pm To 07 pm' WHERE Availability = '08 am To 04 pm';
+--UPDATE HealthProvider SET Availability = '07 pm To 10 pm' WHERE Availability = '11 am To 07 pm';
+UPDATE HealthProvider SET Availability = '09 am To 12 pm' WHERE Availability IN ('08 pm To 04 pm', '11 pm To 07 pm');
 
 INSERT INTO GovernmentRegulator (RegulatorID, Name, Position) VALUES
 ('REG001', 'John Smith', 'Chief Medical Officer'),

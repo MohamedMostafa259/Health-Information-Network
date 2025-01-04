@@ -3,10 +3,12 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
 import numpy as np
+# import pandas as pd
 import pyodbc
 from datetime import datetime
 from reportlab.lib.units import inch
 from matplotlib import pyplot as plt
+import seaborn as sns
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
@@ -35,12 +37,12 @@ class HealthNetworkApp:
         try:
             connection_string = (
                 r"Driver={SQL Server};"
-                # Change it based on your server name
-                r"Server=MOHAMED\MSSQLSERVER01;"  # For M.M.M → r"Server=Mohamed_Mostafa\SQLEXPRESS;" 
+                # server name
+                r"Server=Mohamed_Mostafa\SQLEXPRESS;"  # Mohamed Mostafa  → r"Server=Mohamed_Mostafa\SQLEXPRESS;" 
+                                                       # Mohamed Ibrahim → r"Server=MOHAMED\MSSQLSERVER01;"
                 r"Database=HIN;"
                 r"Trusted_Connection=yes;"
             )
-
             return pyodbc.connect(connection_string)
         except Exception as e:
             messagebox.showerror("Database Error", f"Error connecting to database: {e}")
@@ -80,38 +82,44 @@ class HealthNetworkApp:
             if cursor:
                 cursor.close()
         return tables
-
+        
     def create_table_selection(self):
         self.clear_frame()
-        
+
         # Table selection frame
         table_frame = ttk.LabelFrame(self.main_frame, text="Select Table", padding="10")
         table_frame.grid(row=0, column=0, padx=5, pady=5)
-        
-        ttk.Button(table_frame, text="Table 1: Patient", 
-                  command=lambda: self.show_operations_menu("Patient")).grid(row=0, column=0, pady=5)
-        ttk.Button(table_frame, text="Table 2: HealthProvider", 
-                  command=lambda: self.show_operations_menu("HealthProvider")).grid(row=1, column=0, pady=5)
 
+        tables = ["Patient", "HealthProvider", "GovernmentRegulator", "InsuranceCompany",
+                  "Package", "PackageDetails", "InsuranceCompanyPackages", "Report",
+                  "GovernmentRegulatorReports", "Appointment", "HealthPoviderAppointments", 
+                  "HealthRecord", "Regulator_Access_HealthRecord", "Notification", 
+                  "ReportGeneration", "Card", "Caregiver", "CaregiversNotifications"]
+
+        for i, table in enumerate(tables):
+            ttk.Button(table_frame, text=f"Table {i + 1}: {table}", 
+                       command=lambda t=table: self.show_operations_menu(t)).grid(row=i, column=0, pady=5)
+        
     def show_operations_menu(self, table_name):
         self.clear_frame()
         self.current_table = table_name
-        
+
         # Operations frame
         ops_frame = ttk.LabelFrame(self.main_frame, text=f"Operations for {table_name}", padding="10")
         ops_frame.grid(row=0, column=0, padx=5, pady=5)
-        
-        ttk.Button(ops_frame, text="Option 1: Select", 
-                  command=lambda: self.show_select_options()).grid(row=0, column=0, pady=5)
-        ttk.Button(ops_frame, text="Option 2: Insert", 
-                  command=self.show_insert_form).grid(row=1, column=0, pady=5)
-        ttk.Button(ops_frame, text="Option 3: Update", 
-                  command=self.show_update_form).grid(row=2, column=0, pady=5)
-        ttk.Button(ops_frame, text="Option 4: Delete", 
-                  command=self.show_delete_form).grid(row=3, column=0, pady=5)
-        
+
+        ttk.Button(ops_frame, text="Select", 
+                   command=self.show_select_options).grid(row=0, column=0, pady=5)
+        ttk.Button(ops_frame, text="Insert", 
+                   command=self.show_insert_form).grid(row=1, column=0, pady=5)
+        ttk.Button(ops_frame, text="Update", 
+                   command=self.show_update_form).grid(row=2, column=0, pady=5)
+        ttk.Button(ops_frame, text="Delete", 
+                   command=self.show_delete_form).grid(row=3, column=0, pady=5)
+        ttk.Button(ops_frame, text="Join Select", 
+                  command=self.perform_join_select).grid(row=4, column=0, pady=5)
         ttk.Button(ops_frame, text="Back", 
-                  command=self.create_table_selection).grid(row=4, column=0, pady=20)
+                   command=self.create_table_selection).grid(row=5, column=0, pady=20)
 
     def show_select_options(self):
         self.clear_frame()
@@ -121,12 +129,14 @@ class HealthNetworkApp:
         
         ttk.Button(select_frame, text="Simple Select", 
                   command=self.perform_simple_select).grid(row=0, column=0, pady=5)
-        ttk.Button(select_frame, text="Join Select", 
-                  command=self.perform_join_select).grid(row=1, column=0, pady=5)
+        ttk.Button(select_frame, text="Custom Select", 
+                   command=self.show_custom_select_form).grid(row=1, column=0, pady=5)
+        # ttk.Button(select_frame, text="Join Select", 
+        #           command=self.perform_join_select).grid(row=2, column=0, pady=5)
         ttk.Button(select_frame, text="Generate Report", 
-                  command=self.generate_report).grid(row=2, column=0, pady=5)
+                  command=self.generate_report).grid(row=3, column=0, pady=5)
         ttk.Button(select_frame, text="Back", 
-                  command=lambda: self.show_operations_menu(self.current_table)).grid(row=3, column=0, pady=20)
+                  command=lambda: self.show_operations_menu(self.current_table)).grid(row=4, column=0, pady=20)
 
     def perform_simple_select(self):
         self.clear_frame()
@@ -169,115 +179,230 @@ class HealthNetworkApp:
         ttk.Button(results_frame, text="Back", 
                   command=self.show_select_options).grid(row=2, column=0, columnspan=2, pady=20)
 
-    def perform_join_select(self):
+    def show_custom_select_form(self):
         self.clear_frame()
-        
-        join_frame = ttk.LabelFrame(self.main_frame, text="Join Results", padding="10")
-        join_frame.grid(row=0, column=0, padx=5, pady=5)
-        
-        if self.current_table == "Patient":
-            query = """
-                SELECT 
-                    p.PatientID, p.Name as PatientName, 
-                    hp.Name as ProviderName, hp.Specialty,
-                    a.AppointmentID, a.Time, a.EmergencyStatus
-                FROM Patient p
-                JOIN Appointment a ON p.PatientID = a.PatientID
-                JOIN HealthPoviderAppointments hpa ON a.AppointmentID = hpa.AppointmentID
-                JOIN HealthProvider hp ON hpa.ProviderID = hp.ProviderID
-            """
-        else:  # HealthProvider
-            query = """
-                SELECT 
-                    hp.ProviderID, hp.Name as ProviderName, hp.Specialty,
-                    p.Name as PatientName, a.Time, a.EmergencyStatus
-                FROM HealthProvider hp
-                JOIN HealthPoviderAppointments hpa ON hp.ProviderID = hpa.ProviderID
-                JOIN Appointment a ON hpa.AppointmentID = a.AppointmentID
-                JOIN Patient p ON a.PatientID = p.PatientID
-            """
-        
+
+        select_frame = ttk.LabelFrame(self.main_frame, text=f"Custom Select for {self.current_table}", padding="10")
+        select_frame.grid(row=0, column=0, padx=5, pady=5)
+
+        # Checkboxes for columns
+        self.selected_columns = []
+        columns = self.get_table_columns()
+
+        ttk.Label(select_frame, text="Select Columns:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        for i, col in enumerate(columns):
+            var = tk.BooleanVar()
+            chk = ttk.Checkbutton(select_frame, text=col, variable=var)
+            chk.grid(row=i+1, column=0, sticky="w", padx=5, pady=2)
+            self.selected_columns.append((col, var))
+
+        # Execute button
+        ttk.Button(select_frame, text="Execute", 
+                   command=self.perform_custom_select).grid(row=len(columns)+1, column=0, pady=10)
+        ttk.Button(select_frame, text="Back", 
+                   command=self.show_select_options).grid(row=len(columns)+2, column=0, pady=10)
+
+    def perform_custom_select(self):
+        columns_to_select = [col for col, var in self.selected_columns if var.get()]
+        if not columns_to_select:
+            messagebox.showerror("Error", "Please select at least one column.")
+            return
+
+        self.clear_frame()
+
+        results_frame = ttk.LabelFrame(self.main_frame, text=f"Custom Select Results for {self.current_table}", padding="10")
+        results_frame.grid(row=0, column=0, padx=5, pady=5)
+
+        # Create Treeview
+        tree = ttk.Treeview(results_frame, columns=columns_to_select, show="headings", height=15)
+
+        # Set column headings
+        for col in columns_to_select:
+            tree.heading(col, text=col)
+            tree.column(col, width=100)
+
+        # Fetch and display data
         cursor = None
         try:
             cursor = self.conn.cursor()
+            query = f"SELECT {', '.join(columns_to_select)} FROM {self.current_table}"
             cursor.execute(query)
-        
-            # Create Treeview
-            columns = [column[0] for column in cursor.description]
-            tree = ttk.Treeview(join_frame, columns=columns, show="headings", height=15)
-        
-            # Set column headings
-            for col in columns:
-                tree.heading(col, text=col)
-                tree.column(col, width=120)
-        
-            # Add data
             for row in cursor.fetchall():
                 tree.insert("", tk.END, values=list(row))
-        
         except Exception as e:
-            messagebox.showerror("Error", f"Error fetching join data: {e}")
+            messagebox.showerror("Error", f"Error fetching custom select records: {e}")
         finally:
             if cursor:
                 cursor.close()
 
         # Add scrollbars
-        y_scrollbar = ttk.Scrollbar(join_frame, orient="vertical", command=tree.yview)
-        x_scrollbar = ttk.Scrollbar(join_frame, orient="horizontal", command=tree.xview)
+        y_scrollbar = ttk.Scrollbar(results_frame, orient="vertical", command=tree.yview)
+        x_scrollbar = ttk.Scrollbar(results_frame, orient="horizontal", command=tree.xview)
         tree.configure(yscrollcommand=y_scrollbar.set, xscrollcommand=x_scrollbar.set)
-        
+
         # Grid layout
         tree.grid(row=0, column=0, sticky="nsew")
         y_scrollbar.grid(row=0, column=1, sticky="ns")
         x_scrollbar.grid(row=1, column=0, sticky="ew")
-        
-        ttk.Button(join_frame, text="Back", 
-                  command=self.show_select_options).grid(row=2, column=0, columnspan=2, pady=20)
 
-    def generate_report(self):
+        ttk.Button(results_frame, text="Back", 
+                   command=self.show_custom_select_form).grid(row=2, column=0, columnspan=2, pady=20)
+
+
+
+    def perform_join_select(self):
         self.clear_frame()
-        
-        report_frame = ttk.LabelFrame(self.main_frame, text=f"Report for {self.current_table}", padding="10")
-        report_frame.grid(row=0, column=0, padx=5, pady=5)
-        
-        if self.current_table == "Patient":
-            query = """
-                SELECT 
-                    COUNT(*) as TotalPatients,
-                    COUNT(CASE WHEN InsuranceStatus = 1 THEN 1 END) as InsuredPatients,
-                    COUNT(CASE WHEN InsuranceStatus = 0 THEN 1 END) as UninsuredPatients,
-                    AVG(Age) as AverageAge,
-                    COUNT(DISTINCT InsuranceID) as UniqueInsuranceProviders
-                FROM Patient
-            """
-        else:
-            query = """
-                SELECT 
-                    COUNT(*) as TotalProviders,
-                    COUNT(DISTINCT Specialty) as UniqueSpecialties,
-                    COUNT(DISTINCT ProviderID) as ActiveProviders,
-                    (SELECT COUNT(*) FROM HealthPoviderAppointments) as TotalAppointments
-                FROM HealthProvider
-            """
-        
-        cursor = self.conn.cursor()
-        cursor.execute(query)
-        result = cursor.fetchone()
-        
-        report_text = tk.Text(report_frame, height=15, width=60)
-        report_text.insert(tk.END, f"Report Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-        
-        for i, col in enumerate(cursor.description):
-            report_text.insert(tk.END, f"{col[0]}: {result[i]}\n")
-        
-        report_text.config(state='disabled')
-        report_text.grid(row=0, column=0, padx=5, pady=5)
-        
-        ttk.Button(report_frame, text="Back", 
-                  command=self.show_select_options).grid(row=1, column=0, pady=20)
-        
-        if cursor:
-            cursor.close()
+
+        join_frame = ttk.LabelFrame(self.main_frame, text="Dynamic Join Selector", padding="10")
+        join_frame.grid(row=0, column=0, padx=5, pady=5)
+
+        # Dropdowns for table and join type selection
+        tables = self.get_all_tables()
+        join_types = ["INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "FULL JOIN"]
+
+        def table_field(table_num, row):
+            ttk.Label(join_frame, text=f"Table {table_num}:").grid(row=row, column=0, sticky="w")
+            table_var = tk.StringVar()
+            table_menu = ttk.OptionMenu(join_frame, table_var, None, *tables)
+            table_var.set("Select a Table")  
+            table_menu.grid(row=row, column=1, sticky="ew")
+            return table_var
+
+        def column_selection(row, table_var):
+            # Column selection for Table 1
+            ttk.Label(join_frame, text=f"Select Columns:").grid(row=row, column=2, sticky="w", padx=(20,0))
+            table_cols_frame = ttk.Frame(join_frame)
+            table_cols_frame.grid(row=row, column=3, sticky="w")
+            table_col_vars = []
+
+            def update_table_columns(*args):
+                for widget in table_cols_frame.winfo_children():
+                    widget.destroy()
+                table_col_vars.clear()
+                
+                if table_var.get() != "Select a Table":
+                    all_var = tk.BooleanVar(value=True)
+                    ttk.Checkbutton(table_cols_frame, text="All", variable=all_var).pack(side=tk.LEFT)
+                    table_col_vars.append(("All", all_var))
+
+                    cursor = self.conn.cursor()
+                    cursor.execute(f"SELECT TOP 1 * FROM {table_var.get()}")
+                    columns = [description[0] for description in cursor.description]
+                    cursor.close()
+
+                    for col in columns:
+                        var = tk.BooleanVar()
+                        ttk.Checkbutton(table_cols_frame, text=col, variable=var).pack(side=tk.LEFT)
+                        table_col_vars.append((col, var))
+
+            table_var.trace('w', update_table_columns)
+            return table_col_vars
+           
+        def join_field(row):
+            ttk.Label(join_frame, text="Join Type:").grid(row=row, column=0, sticky="w")
+            join_type_var = tk.StringVar()
+            join_type_menu = ttk.OptionMenu(join_frame, join_type_var, None, *join_types)
+            join_type_var.set(join_types[0])  # Explicitly set INNER JOIN
+            join_type_menu.grid(row=row, column=1, sticky="ew")
+            return join_type_var
+
+        def condition_field(leftTableIdx, rightTableIdx, row):
+            ttk.Label(join_frame, text=f"On Condition (e.g., table{leftTableIdx}.col = table{rightTableIdx}.col):").grid(row=row, column=0, sticky="w")
+            on_condition_entry = ttk.Entry(join_frame, width=50)
+            on_condition_entry.grid(row=row, column=1, sticky="ew")
+            return on_condition_entry
+
+
+        cur_row = 0
+        cur_table_idx = 1
+
+        self.table1 = table_field(table_num=cur_table_idx, row=cur_row)
+        self.table1_selected_cols = column_selection(row=cur_row, table_var=self.table1); cur_table_idx += 1; cur_row += 1
+        self.join1 = join_field(row=cur_row); cur_row += 1
+        self.table2 = table_field(table_num=cur_table_idx, row=cur_row)
+        self.table2_selected_cols = column_selection(row=cur_row, table_var=self.table2); cur_table_idx += 1; cur_row += 1
+        self.on_condition1 = condition_field(leftTableIdx=1, rightTableIdx=2, row=cur_row); cur_row += 1
+
+        self.join2 = join_field(row=cur_row); cur_row += 1
+        self.table3 = table_field(table_num=cur_table_idx, row=cur_row)
+        self.table3_selected_cols = column_selection(row=cur_row, table_var=self.table3); cur_table_idx += 1; cur_row += 1
+        self.on_condition2 = condition_field(leftTableIdx=2, rightTableIdx=3, row=cur_row); cur_row += 1
+
+        self.join3 = join_field(row=cur_row); cur_row += 1
+        self.table4 = table_field(table_num=cur_table_idx, row=cur_row)
+        self.table4_selected_cols = column_selection(row=cur_row, table_var=self.table4); cur_table_idx += 1; cur_row += 1
+        self.on_condition3 = condition_field(leftTableIdx=3, rightTableIdx=4, row=cur_row); cur_row += 1
+
+        def get_selected_columns(table_name, col_vars):
+            selected_cols = []
+            if col_vars[0][1].get(): # All is selected
+                selected_cols = [f"{table_name}.*"]
+            else:
+                selected_cols = [f"{table_name}.{col}" for col, checked in col_vars if col != 'All' and checked.get()]
+            return selected_cols
+
+        def execute_join():
+            if self.table1.get() == "Select a Table" or self.table2.get() == "Select a Table" or self.on_condition1.get() == "":
+                messagebox.showerror("Error", "You should join at least two tables (fill the first 4 fields)")
+                return
+
+            table1_selected_cols = get_selected_columns(self.table1.get(), self.table1_selected_cols)
+            table2_selected_cols = get_selected_columns(self.table2.get(), self.table2_selected_cols)
+            tables_selected_cols = table1_selected_cols + table2_selected_cols
+
+            query_joined_tables_part = f"{self.table1.get()} {self.join1.get()} {self.table2.get()} ON {self.on_condition1.get()}"
+            # query_ON_part = self.on_condition1.get()
+            
+            if self.table3.get() != "Select a Table" and self.on_condition2.get() != "":
+                query_joined_tables_part += f" {self.join2.get()} {self.table3.get()} ON {self.on_condition2.get()}"
+                # query_ON_part += f" AND {self.on_condition2.get()}"
+                table3_selected_cols = get_selected_columns(self.table3.get(), self.table3_selected_cols)
+                tables_selected_cols += table3_selected_cols
+            
+                if self.table4.get() != "Select a Table" and self.on_condition3.get() != "":
+                    print("table 4")
+                    query_joined_tables_part += f" {self.join3.get()} {self.table4.get()} ON {self.on_condition3.get()}"
+                    # query_ON_part += f" AND {self.on_condition3.get()}"
+                    table4_selected_cols = get_selected_columns(self.table4.get(), self.table4_selected_cols)
+                    tables_selected_cols += table4_selected_cols
+
+            query_selected_columns_part = ', '.join(tables_selected_cols)
+
+            # Execute join query
+            try:
+                cursor = self.conn.cursor()
+                query = f"SELECT {query_selected_columns_part} FROM {query_joined_tables_part}"
+                cursor.execute(query)
+                print(query)
+
+                # Display results
+                columns = [desc[0] for desc in cursor.description]
+                print(columns) ##############
+                results_frame = ttk.Frame(join_frame)
+                results_frame.grid(row=5, column=0, columnspan=2, sticky="nsew")
+
+                tree = ttk.Treeview(results_frame, columns=columns, show="headings", height=15)
+                for col in columns:
+                    tree.heading(col, text=col)
+                    tree.column(col, width=120)
+                for row in cursor.fetchall():
+                    tree.insert("", tk.END, values=list(row))
+
+                y_scrollbar = ttk.Scrollbar(results_frame, orient="vertical", command=tree.yview)
+                x_scrollbar = ttk.Scrollbar(results_frame, orient="horizontal", command=tree.xview)
+                tree.configure(yscrollcommand=y_scrollbar.set, xscrollcommand=x_scrollbar.set)
+                tree.grid(row=0, column=0, sticky="nsew")
+                y_scrollbar.grid(row=0, column=1, sticky="ns")
+                x_scrollbar.grid(row=1, column=0, sticky="ew")
+
+            except Exception as e:
+                messagebox.showerror("Error", f"Error executing join query: {e}")
+
+        # Execute button
+        ttk.Button(join_frame, text="Execute Join", command=execute_join).grid(row=10, column=0, columnspan=2, pady=10)
+
+        # Back button
+        ttk.Button(join_frame, text="Back", command=lambda: self.show_operations_menu(self.current_table)).grid(row=cur_row + 1, column=0, columnspan=2, pady=10)
 
     def show_insert_form(self):
         self.clear_frame()
@@ -296,7 +421,7 @@ class HealthNetworkApp:
                   command=self.perform_insert).grid(row=len(self.entries), column=0, columnspan=2, pady=20)
         ttk.Button(insert_frame, text="Back", 
                   command=lambda: self.show_operations_menu(self.current_table)).grid(row=len(self.entries)+1, column=0, columnspan=2)
-
+    
     def perform_insert(self):
         values = [self.entries[column].get() for column in self.entries]
         columns = ", ".join(self.entries.keys())
@@ -476,25 +601,6 @@ class HealthNetworkApp:
                 )
                 self.conn.commit()
                 
-                # print(f"Current table: {self.current_table}")
-                # print(f"ID column: {self.current_table}ID")
-                # query = f"DELETE FROM {self.current_table} WHERE {self.current_table}ID = ?"
-                # print(f"Executing query: {query} with parameter: {(record[0],)}")
-                # print("Value to be deleted:", record[0])
-                # print("Type:", type(record[0]))
-                # print(record)
-                # print(type(record))
-                # for attr in record:
-                #     print(attr)
-                # print(self.delete_tree.item(selected_item[0]), '\n')
-                # print(self.delete_tree.item(selected_item))
-
-                # cursor = self.conn.cursor()
-                # cursor.execute(query, (record[0],))
-                # rows_deleted = cursor.rowcount
-                # print(f"Rows deleted: {rows_deleted}")
-                # self.conn.commit()
-                
                 messagebox.showinfo("Success", "Record deleted successfully!")
                 # Clear the treeview
                 for item in self.delete_tree.get_children():
@@ -505,13 +611,50 @@ class HealthNetworkApp:
             finally:
                 if cursor:
                     cursor.close()
-
+        
     def get_table_columns(self):
-        if self.current_table == "Patient":
-            return ["PatientID", "Name", "PhoneNo", "NationalID", "InsuranceStatus", 
-                   "Birthdate", "Gender", "Email", "Age", "InsuranceID", "PackageID"]
-        else:  # HealthProvider
-            return ["ProviderID", "Availability", "Specialty", "Name"]
+        table_columns = {
+            "Patient": ["PatientID", "Name", "PhoneNo", "NationalID", "InsuranceStatus", 
+                        "Birthdate", "Gender", "Email", "Age", "InsuranceID", "PackageID"],
+
+            "HealthProvider": ["ProviderID", "Availability", "Specialty", "Name"],
+            
+            "GovernmentRegulator": ["RegulatorID", "Name", "Position"],
+            
+            "InsuranceCompany": ["InsuranceID", "CompanyName", "Email", "Phone"],
+            
+            "Package": ["PackageID"],
+            
+            "PackageDetails": ["IllnessType", "Percentage", "PackageID"],
+            
+            "InsuranceCompanyPackages": ["InsuranceID", "PackageID"],
+            
+            "Report": ["ReportID", "ReportType", "GenerateDate"],
+            
+            "GovernmentRegulatorReports": ["ReportID", "RegulatorID"],
+            
+            "Appointment": ["AppointmentID", "EmergencyStatus", "Time", "Type_of_illness", "PaymentAmount", 
+                             "PaymentMethod", "PatientID"],
+            
+            "HealthPoviderAppointments": ["AppointmentID", "ProviderID"],
+
+            "HealthRecord": ["RecordID", "TypeOfIncident", "DateOfIncident", "Details", "PatientID", 
+                             "AppointmentID", "ProviderID"],
+            
+            "Regulator_Access_HealthRecord": ["RegulatorID", "RecordID"],
+            
+            "Notification": ["NotificationID", "Message", "NotificationType", "Date", "PatientID", 
+                              "InsuranceID", "AppointmentID"],
+            
+            "ReportGeneration": ["NotificationID", "ProviderID", "ReportID"],
+            
+            "Card": ["CardNumber", "ExpirationDate", "CardHolderName", "CardType", "BankName", "PatientID"],
+            
+            "Caregiver": ["PatientID", "Relationship", "Name", "Phone", "Email"],
+            
+            "CaregiversNotifications": ["Relationship", "Name", "NotificationID", "PatientID"]
+        }
+        return table_columns.get(self.current_table, [])
 
     def clear_frame(self):
         for widget in self.main_frame.winfo_children():
@@ -532,13 +675,12 @@ class HealthNetworkApp:
             # Get basic statistics for any table
             cursor.execute(f"""
                 SELECT 
-                    COUNT(*) as TotalRecords,
-                    COUNT(DISTINCT {self.get_table_columns()[0]}) as UniqueIDs
+                    COUNT(*) as TotalRecords
                 FROM {self.current_table}
             """)
-            basic_stats = cursor.fetchone()
-            report_data.extend([basic_stats[0], basic_stats[1]])
-            column_names.extend(['Total Records', 'Unique IDs'])
+            total_records = cursor.fetchone()
+            report_data.extend([total_records[0]])
+            column_names.extend([f'Total {self.current_table}s'])
 
             # Add table-specific statistics
             if self.current_table == "Patient":
@@ -560,14 +702,22 @@ class HealthNetworkApp:
                 ])
             elif self.current_table == "HealthProvider":
                 cursor.execute("""
-                    SELECT 
-                        COUNT(DISTINCT Specialty) as UniqueSpecialties,
-                        COUNT(CASE WHEN Availability = 1 THEN 1 END) as AvailableProviders
+                    SELECT COUNT(DISTINCT Specialty)
                     FROM HealthProvider
                 """)
-                stats = cursor.fetchone()
-                report_data.extend([stats[0], stats[1]])
-                column_names.extend(['Unique Specialties', 'Available Providers'])
+                num_unique_specialties = cursor.fetchone()
+                report_data.extend([num_unique_specialties[0]])
+                column_names.extend(['Unique Specialties'])
+
+                cursor.execute("""
+                    SELECT DISTINCT Specialty
+                    FROM HealthProvider
+                """)
+                # print(cursor.fetchone())
+                specialties = cursor.fetchall()
+                for idx, specialty in enumerate(specialties):
+                    report_data.extend([specialty[0]])
+                    column_names.extend([f'     Specialty {idx+1}'])
 
             # Display report in text widget
             report_text = tk.Text(report_frame, height=15, width=60)
@@ -752,7 +902,7 @@ class HealthNetworkApp:
 
             plt.figure(figsize=(6, 4))
             plt.pie(counts, labels=specialties, autopct='%1.1f%%')
-            plt.title('Provider Specialty Distribution')
+            plt.title('Health Provider Specialty Distribution')
 
             # Save chart to bytes buffer
             buf = io.BytesIO()
@@ -762,7 +912,7 @@ class HealthNetworkApp:
             # Add chart to PDF
             buf.seek(0)
             img = ImageReader(buf)
-            pdf_canvas.drawImage(img, 100, 400, width=4 * inch, height=3 * inch)
+            pdf_canvas.drawImage(img, x=100, y=350, width=4 * inch, height=3 * inch)
 
         except Exception as e:
             print(f"Error creating specialty distribution chart: {e}")
@@ -775,30 +925,23 @@ class HealthNetworkApp:
         try:
             cursor = self.conn.cursor()
             cursor.execute("""
-                SELECT 
-                    Specialty,
-                    SUM(CASE WHEN Availability = 1 THEN 1 ELSE 0 END) as Available,
-                    SUM(CASE WHEN Availability = 0 THEN 1 ELSE 0 END) as Unavailable
+                SELECT Specialty, Availability
                 FROM HealthProvider
-                GROUP BY Specialty
             """)
 
             data = cursor.fetchall()
             specialties = [row[0] for row in data]
-            available = [row[1] for row in data]
-            unavailable = [row[2] for row in data]
+            availabilities = [row[1] for row in data]
+            print(specialties)
+            print(availabilities)
 
-            x = np.arange(len(specialties))
-            width = 0.35
-
-            plt.figure(figsize=(8, 4))
-            plt.bar(x - width / 2, available, width, label='Available', color='lightgreen')
-            plt.bar(x + width / 2, unavailable, width, label='Unavailable', color='lightcoral')
+            plt.figure(figsize=(8, 6))
+            sns.countplot(x=availabilities, hue=specialties)
 
             plt.xlabel('Specialty')
             plt.ylabel('Number of Providers')
-            plt.title('Provider Availability by Specialty')
-            plt.xticks(x, specialties, rotation=45)
+            plt.title('Health Provider Availability by Specialty')
+            plt.xticks(rotation=45)
             plt.legend()
             plt.tight_layout()
 
@@ -813,7 +956,7 @@ class HealthNetworkApp:
             pdf_canvas.drawImage(img, 100, 100, width=4 * inch, height=3 * inch)
 
         except Exception as e:
-            print(f"Error creating provider availability chart: {e}")
+            print(f"Error creating Health Provider Specialties chart: {e}")
         finally:
             if cursor:
                 cursor.close()
