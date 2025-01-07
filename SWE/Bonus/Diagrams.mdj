@@ -89047,34 +89047,6 @@
 					"ownedElements": [
 						{
 							"_type": "UMLAssociation",
-							"_id": "AAAAAAGUQRHvFnzzVMI=",
-							"_parent": {
-								"$ref": "AAAAAAGUQQeYnHghcKg="
-							},
-							"end1": {
-								"_type": "UMLAssociationEnd",
-								"_id": "AAAAAAGUQRHvFnz0ovk=",
-								"_parent": {
-									"$ref": "AAAAAAGUQRHvFnzzVMI="
-								},
-								"reference": {
-									"$ref": "AAAAAAGUQQeYnHghcKg="
-								}
-							},
-							"end2": {
-								"_type": "UMLAssociationEnd",
-								"_id": "AAAAAAGUQRHvFnz1GCA=",
-								"_parent": {
-									"$ref": "AAAAAAGUQRHvFnzzVMI="
-								},
-								"reference": {
-									"$ref": "AAAAAAGUQRNh3n3iZ2E="
-								},
-								"navigable": "navigable"
-							}
-						},
-						{
-							"_type": "UMLAssociation",
 							"_id": "AAAAAAGUQSmLxKCB8aw=",
 							"_parent": {
 								"$ref": "AAAAAAGUQQeYnHghcKg="
@@ -89126,102 +89098,6 @@
 							"name": "update"
 						}
 					]
-				},
-				{
-					"_type": "UMLClass",
-					"_id": "AAAAAAGUQREUBXhmWvs=",
-					"_parent": {
-						"$ref": "AAAAAAGUQP7RFOo4wvs="
-					},
-					"name": "AppointmentHandler",
-					"ownedElements": [
-						{
-							"_type": "UMLAssociation",
-							"_id": "AAAAAAGUQRFMzXiQSQ8=",
-							"_parent": {
-								"$ref": "AAAAAAGUQREUBXhmWvs="
-							},
-							"end1": {
-								"_type": "UMLAssociationEnd",
-								"_id": "AAAAAAGUQRFMzXiREsc=",
-								"_parent": {
-									"$ref": "AAAAAAGUQRFMzXiQSQ8="
-								},
-								"reference": {
-									"$ref": "AAAAAAGUQREUBXhmWvs="
-								}
-							},
-							"end2": {
-								"_type": "UMLAssociationEnd",
-								"_id": "AAAAAAGUQRFMzXiSDVg=",
-								"_parent": {
-									"$ref": "AAAAAAGUQRFMzXiQSQ8="
-								},
-								"reference": {
-									"$ref": "AAAAAAGUQQeYnHghcKg="
-								},
-								"navigable": "navigable"
-							}
-						},
-						{
-							"_type": "UMLAssociation",
-							"_id": "AAAAAAGUQROCw38+CYk=",
-							"_parent": {
-								"$ref": "AAAAAAGUQREUBXhmWvs="
-							},
-							"end1": {
-								"_type": "UMLAssociationEnd",
-								"_id": "AAAAAAGUQROCw38/SjI=",
-								"_parent": {
-									"$ref": "AAAAAAGUQROCw38+CYk="
-								},
-								"reference": {
-									"$ref": "AAAAAAGUQREUBXhmWvs="
-								}
-							},
-							"end2": {
-								"_type": "UMLAssociationEnd",
-								"_id": "AAAAAAGUQROCw39Aa6w=",
-								"_parent": {
-									"$ref": "AAAAAAGUQROCw38+CYk="
-								},
-								"reference": {
-									"$ref": "AAAAAAGUQRNh3n3iZ2E="
-								},
-								"navigable": "navigable"
-							}
-						}
-					],
-					"attributes": [
-						{
-							"_type": "UMLAttribute",
-							"_id": "AAAAAAGUQYcNrcseo4k=",
-							"_parent": {
-								"$ref": "AAAAAAGUQREUBXhmWvs="
-							},
-							"name": "appointments",
-							"visibility": "private",
-							"type": {
-								"$ref": "AAAAAAGUQRNh3n3iZ2E="
-							}
-						}
-					]
-				},
-				{
-					"_type": "UMLClass",
-					"_id": "AAAAAAGUQRNh3n3iZ2E=",
-					"_parent": {
-						"$ref": "AAAAAAGUQP7RFOo4wvs="
-					},
-					"name": "Appointment"
-				},
-				{
-					"_type": "UMLClass",
-					"_id": "AAAAAAGUQRbtDIFRexE=",
-					"_parent": {
-						"$ref": "AAAAAAGUQP7RFOo4wvs="
-					},
-					"name": "Appointment"
 				},
 				{
 					"_type": "UMLClass",
@@ -89368,62 +89244,6 @@
 					},
 					"name": "Notification",
 					"ownedElements": [
-						{
-							"_type": "UMLAssociation",
-							"_id": "AAAAAAGUQSmZgKI18eQ=",
-							"_parent": {
-								"$ref": "AAAAAAGUQSbWAJJ6GQM="
-							},
-							"end1": {
-								"_type": "UMLAssociationEnd",
-								"_id": "AAAAAAGUQSmZgKI2uWY=",
-								"_parent": {
-									"$ref": "AAAAAAGUQSmZgKI18eQ="
-								},
-								"reference": {
-									"$ref": "AAAAAAGUQSbWAJJ6GQM="
-								}
-							},
-							"end2": {
-								"_type": "UMLAssociationEnd",
-								"_id": "AAAAAAGUQSmZgaI3aoQ=",
-								"_parent": {
-									"$ref": "AAAAAAGUQSmZgKI18eQ="
-								},
-								"reference": {
-									"$ref": "AAAAAAGUQRNh3n3iZ2E="
-								},
-								"navigable": "navigable"
-							}
-						},
-						{
-							"_type": "UMLAssociation",
-							"_id": "AAAAAAGUQStLBKlWFHw=",
-							"_parent": {
-								"$ref": "AAAAAAGUQSbWAJJ6GQM="
-							},
-							"end1": {
-								"_type": "UMLAssociationEnd",
-								"_id": "AAAAAAGUQStLBKlXfaU=",
-								"_parent": {
-									"$ref": "AAAAAAGUQStLBKlWFHw="
-								},
-								"reference": {
-									"$ref": "AAAAAAGUQSbWAJJ6GQM="
-								}
-							},
-							"end2": {
-								"_type": "UMLAssociationEnd",
-								"_id": "AAAAAAGUQStLBKlYJrs=",
-								"_parent": {
-									"$ref": "AAAAAAGUQStLBKlWFHw="
-								},
-								"reference": {
-									"$ref": "AAAAAAGUQSshdaWGBrA="
-								},
-								"navigable": "navigable"
-							}
-						},
 						{
 							"_type": "UMLAssociation",
 							"_id": "AAAAAAGUQXvVVbfcbe4=",
@@ -89585,52 +89405,6 @@
 						"$ref": "AAAAAAGUQP7RFOo4wvs="
 					},
 					"name": "Interface2"
-				},
-				{
-					"_type": "UMLClass",
-					"_id": "AAAAAAGUQSr3hqTDYVo=",
-					"_parent": {
-						"$ref": "AAAAAAGUQP7RFOo4wvs="
-					},
-					"name": "PaymentHandler",
-					"ownedElements": [
-						{
-							"_type": "UMLAssociation",
-							"_id": "AAAAAAGUQSs9a6dO9r4=",
-							"_parent": {
-								"$ref": "AAAAAAGUQSr3hqTDYVo="
-							},
-							"end1": {
-								"_type": "UMLAssociationEnd",
-								"_id": "AAAAAAGUQSs9a6dPud4=",
-								"_parent": {
-									"$ref": "AAAAAAGUQSs9a6dO9r4="
-								},
-								"reference": {
-									"$ref": "AAAAAAGUQSr3hqTDYVo="
-								}
-							},
-							"end2": {
-								"_type": "UMLAssociationEnd",
-								"_id": "AAAAAAGUQSs9a6dQ6d8=",
-								"_parent": {
-									"$ref": "AAAAAAGUQSs9a6dO9r4="
-								},
-								"reference": {
-									"$ref": "AAAAAAGUQSshdaWGBrA="
-								},
-								"navigable": "navigable"
-							}
-						}
-					]
-				},
-				{
-					"_type": "UMLClass",
-					"_id": "AAAAAAGUQSshdaWGBrA=",
-					"_parent": {
-						"$ref": "AAAAAAGUQP7RFOo4wvs="
-					},
-					"name": "Payment"
 				},
 				{
 					"_type": "UMLInterface",
