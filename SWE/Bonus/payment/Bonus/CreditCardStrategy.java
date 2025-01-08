@@ -5,33 +5,20 @@ import java.util.*;
 /**
  * 
  */
-public class CreditCardStrategy extends PaymentStrategy implements Interface3 {
+public class CreditCardStrategy implements PaymentStrategy {
+    private String cardNumber;
+    private String cardHolderName;
+    private String expirationDate;
+    private String cvv;
 
-    /**
-     * Default constructor
-     */
-    public CreditCardStrategy() {
+    public CreditCardStrategy(String cardNumber, String cardHolderName, 
+    String expirationDate, String cvv) {
+        this.cardNumber = cardNumber;
+        this.cardHolderName = cardHolderName;
+        this.expirationDate = expirationDate;
+        this.cvv = cvv;
     }
 
-    /**
-     * 
-     */
-    private void String cardNumber;
-
-    /**
-     * 
-     */
-    private void String cardHolderName;
-
-    /**
-     * 
-     */
-    private void String expirationDate;
-
-    /**
-     * 
-     */
-    private void String cvv;
 
     /**
      * @param String cardNumber 
@@ -39,16 +26,17 @@ public class CreditCardStrategy extends PaymentStrategy implements Interface3 {
      * @param String expDate 
      * @param String cvv
      */
-    public CreditCardStrategy(void String cardNumber, void String name, void String expDate, void String cvv) {
-        // TODO implement here
-    }
+
 
     /**
      * @param double amount 
      * @return
      */
-    public boolean pay(void double amount) {
-        // TODO implement here
+    public boolean pay(double amount) {
+        if (validatePayment()) {
+            System.out.println("Paying $" + amount + " using Credit Card");
+            return true;
+        }
         return false;
     }
 
@@ -56,8 +44,9 @@ public class CreditCardStrategy extends PaymentStrategy implements Interface3 {
      * @return
      */
     public boolean validatePayment() {
-        // TODO implement here
-        return false;
+        // Add credit card validation logic
+        return cardNumber != null && !cardNumber.isEmpty() && 
+               cardNumber.length() == 16 && cvv.length() == 3;
     }
 
 }
