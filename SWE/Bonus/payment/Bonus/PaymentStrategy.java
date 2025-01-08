@@ -17,7 +17,7 @@ public class PaymentStrategy {
      * @param double amount 
      * @return
      */
-    public boolean pay(void double amount) {
+    public boolean pay(double amount) {
         // TODO implement here
         return false;
     }
