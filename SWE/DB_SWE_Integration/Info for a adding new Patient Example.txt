@@ -1,0 +1,13 @@
+Info for a adding new Patient Example (ensuring that the insertion feature works correctly):
+
+PAT006
+Mohamed
+01142087237
+34567890123753
+true
+2000-05-14
+Male
+mmmmm@gmail.com
+20
+INS001
+P1

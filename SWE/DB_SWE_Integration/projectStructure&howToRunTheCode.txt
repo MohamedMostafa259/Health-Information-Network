@@ -1,0 +1,28 @@
+Project Structure:
+integrationTask/
+├── bin/
+│   ├── model/
+│   │   ├── DatabaseConnection.class
+│   │   └── Patient.class
+│   ├── controller/
+│   │   └── HealthNetworkController.class
+│   └── view/
+│       └── HealthNetworkView.class
+├── lib/
+│   └── sqlite-jdbc-3.47.2.0.jar
+├── src/
+│   ├── model/
+│   │   ├── DatabaseConnection.java
+│   │   └── Patient.java
+│   ├── controller/
+│   │   └── HealthNetworkController.java
+│   └── view/
+│       └── HealthNetworkView.java
+└── healthnetwork.db
+
+
+Compile all Java files explicitly:
+cd .\integrationTask\ 
+javac -cp "lib/sqlite-jdbc-3.47.2.0.jar" -d bin src/model/DatabaseConnection.java src/model/Patient.java src/controller/HealthNetworkController.java src/view/HealthNetworkView.java
+Run:
+java -cp "bin;lib/sqlite-jdbc-3.47.2.0.jar" view.HealthNetworkView
