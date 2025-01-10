@@ -5,44 +5,22 @@ import java.util.*;
 /**
  * 
  */
-public class DebitCardStrategy extends PaymentStrategy {
+public class DebitCardStrategy implements PaymentStrategy {
+    private String cardNumber;
+    private String cardHolderName;
+    private String bankName;
 
-    /**
-     * Default constructor
-     */
-    public DebitCardStrategy() {
+    public DebitCardStrategy(String cardNumber, String cardHolderName, String bankName) {
+        this.cardNumber = cardNumber;
+        this.cardHolderName = cardHolderName;
+        this.bankName = bankName;
     }
 
-    /**
-     * 
-     */
-    public void String cardNumber;
-
-    /**
-     * 
-     */
-    public void String cardHolderName;
-
-    /**
-     * 
-     */
-    public void String bankName;
-
-    /**
-     * @param String cardNumber 
-     * @param String name 
-     * @param String bank
-     */
-    public DebitCardStrategy(void String cardNumber, void String name, void String bank) {
-        // TODO implement here
-    }
-
-    /**
-     * @param double amount 
-     * @return
-     */
-    public boolean pay(void double amount) {
-        // TODO implement here
+    public boolean pay(double amount) {
+        if (validatePayment()) {
+            System.out.println("Paying $" + amount + " using Debit Card from " + bankName);
+            return true;
+        }
         return false;
     }
 
@@ -50,8 +28,8 @@ public class DebitCardStrategy extends PaymentStrategy {
      * @return
      */
     public boolean validatePayment() {
-        // TODO implement here
-        return false;
+        return cardNumber != null && !cardNumber.isEmpty() && 
+               cardNumber.length() == 16 && bankName != null;
     }
 
 }

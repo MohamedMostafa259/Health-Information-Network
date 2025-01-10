@@ -5,44 +5,28 @@ import java.util.*;
 /**
  * 
  */
-public class InsuranceStrategy extends PaymentStrategy {
+public class InsuranceStrategy implements PaymentStrategy {
+    private String insuranceId;
+    private String policyNumber;
+    private double coveragePercentage;
 
-    /**
-     * Default constructor
-     */
-    public InsuranceStrategy() {
-    }
+    public InsuranceStrategy(String insuranceId, String policyNumber, double coveragePercentage) {
+        this.insuranceId = insuranceId;
+        this.policyNumber = policyNumber;
+        this.coveragePercentage = coveragePercentage;
 
-    /**
-     * 
-     */
-    private void String insuranceId;
-
-    /**
-     * 
-     */
-    private void String policyNumber;
-
-    /**
-     * 
-     */
-    private void double coveragePercentage;
-
-    /**
-     * @param String insuranceId 
-     * @param String policyNumber 
-     * @param double coverage
-     */
-    public InsuranceStrategy(void String insuranceId, void String policyNumber, void double coverage) {
-        // TODO implement here
     }
 
     /**
      * @param double amount 
      * @return
      */
-    public boolean pay(void double amount) {
-        // TODO implement here
+    public boolean pay(double amount) {
+        if (validatePayment()) {
+            double coveredAmount = amount * (coveragePercentage / 100.0);
+            System.out.println("Processing insurance payment for $" + coveredAmount);
+            return true;
+        }
         return false;
     }
 
@@ -50,8 +34,8 @@ public class InsuranceStrategy extends PaymentStrategy {
      * @return
      */
     public boolean validatePayment() {
-        // TODO implement here
-        return false;
+        return insuranceId != null && policyNumber != null && 
+               coveragePercentage > 0 && coveragePercentage <= 100;
     }
 
 }

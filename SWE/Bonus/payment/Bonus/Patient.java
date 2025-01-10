@@ -6,55 +6,50 @@ import java.util.*;
  * 
  */
 public class Patient {
+    private String patientId;
+    private String name;
+    private Payment currentPayment;
 
-    /**
-     * Default constructor
-     */
-    public Patient() {
+    public Patient(String patientId, String name) {
+        this.patientId = patientId;
+        this.name = name;
     }
-
-    /**
-     * 
-     */
-    private void String patientId;
-
-    /**
-     * 
-     */
-    private void String name;
 
     /**
      * @param String patientId 
      * @param String name
      */
-    public Patient(void String patientId, void String name) {
-        // TODO implement here
-    }
 
     /**
      * @param double amount 
      * @return
      */
-    public void makePayment(void double amount) {
-        // TODO implement here
-        return null;
+    public void makePayment(double amount) {
+        this.currentPayment = new Payment(amount, generatePaymentId());
     }
+
 
     /**
      * @param PaymentStrategy strategy 
      * @return
      */
-    public void processPayment(void PaymentStrategy strategy) {
-        // TODO implement here
-        return null;
+    
+     public void processPayment(PaymentStrategy strategy) {
+        if (currentPayment != null) {
+            currentPayment.setPaymentStrategy(strategy);
+            currentPayment.processPayment();
+        } else {
+            throw new IllegalStateException("No payment initialized. Call makePayment first.");
+        }
     }
+
 
     /**
      * @return
      */
     private String generatePaymentId() {
-        // TODO implement here
-        return "";
+        return "PAY-" + patientId + "-" + System.currentTimeMillis();
     }
 
 }
+
