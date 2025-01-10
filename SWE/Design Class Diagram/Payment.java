@@ -1,68 +1,48 @@
 
 import java.io.*;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
  * 
  */
 public class Payment {
+ private double amount;
+    private String paymentId;
+    private LocalDateTime paymentDate;
+    private PaymentStrategy paymentStrategy;
 
-    /**
-     * Default constructor
-     */
-    public Payment() {
+    public Payment(double amount, String paymentId) {
+        this.amount = amount;
+        this.paymentId = paymentId;
+        this.paymentDate = LocalDateTime.now();
     }
 
-    /**
-     * 
-     */
-    private string paymentID;
 
-    /**
-     * 
-     */
-    private date paymentDate;
-
-    /**
-     * 
-     */
-    private double amount;
-
-    /**
-     * 
-     */
-    private string paymentMethod;
 
     /**
      * @param double amount 
      * @param String paymentId
      */
-    public Payment(void double amount, void String paymentId) {
-        // TODO implement here
-    }
+ 
 
     /**
      * @return
      */
     public boolean processPayment() {
-        // TODO implement here
-        return false;
+      if (paymentStrategy == null) {
+            throw new IllegalStateException("Payment strategy not set");
+        }
+        return paymentStrategy.pay(amount);
     }
+    
 
     /**
      * @param PaymentStrategy strategy 
      * @return
      */
-    public void setPaymentStrategy(void PaymentStrategy strategy) {
-        // TODO implement here
-        return null;
-    }
+    public void setPaymentStrategy(PaymentStrategy strategy) {
+        this.paymentStrategy = strategy;
 
-    /**
-     * @param patientID
-     */
-    public void controlPayment(void patientID) {
-        // TODO implement here
     }
-
 }
