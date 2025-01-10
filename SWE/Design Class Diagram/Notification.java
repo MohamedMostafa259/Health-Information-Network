@@ -1,57 +1,42 @@
+import java.util.ArrayList;
+import java.util.List;
 
-import java.io.*;
-import java.util.*;
+public class Notification implements NotificationService {
+    private List<NotificationObserver> observers = new ArrayList<>();
+    private List<String> patients = new ArrayList<>();
+    private String notification;
 
-/**
- * 
- */
-public class Notification {
-
-    /**
-     * Default constructor
-     */
-    public Notification() {
+    public void addPatient(String patient) {
+        patients.add(patient);
+        notification = "New patient added: " + patient;
+        notifyObservers();
     }
 
-    /**
-     * 
-     */
-    private string notificationID;
-
-    /**
-     * 
-     */
-    private date date;
-
-    /**
-     * 
-     */
-    private string notificationType;
-
-    /**
-     * 
-     */
-    private string message;
-
-    /**
-     * 
-     */
-    public void addPatient() {
-        // TODO implement here
+    public void removePatient(String patient) {
+        patients.remove(patient);
+        notification = "Patient removed: " + patient;
+        notifyObservers();
     }
 
-    /**
-     * 
-     */
-    public void removePatient() {
-        // TODO implement here
+    public void notifyPatient(String message) {
+        notification = message;
+        notifyObservers();
     }
 
-    /**
-     * 
-     */
-    public void notifyPatient() {
-        // TODO implement here
+    @Override
+    public void addObserver(NotificationObserver observer) {
+        observers.add(observer);
     }
 
+    @Override
+    public void removeObserver(NotificationObserver observer) {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers() {
+        for (NotificationObserver observer : observers) {
+            observer.update(notification);
+        }
+    }
 }
