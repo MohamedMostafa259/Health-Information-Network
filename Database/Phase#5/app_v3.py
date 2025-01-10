@@ -200,12 +200,10 @@ class HealthNetworkApp:
             if cursor:
                 cursor.close()
 
-        # Add scrollbars
         y_scrollbar = ttk.Scrollbar(results_frame, orient="vertical", command=tree.yview)
         x_scrollbar = ttk.Scrollbar(results_frame, orient="horizontal", command=tree.xview)
         tree.configure(yscrollcommand=y_scrollbar.set, xscrollcommand=x_scrollbar.set)
 
-        # Grid layout
         tree.grid(row=0, column=0, sticky="nsew")
         y_scrollbar.grid(row=0, column=1, sticky="ns")
         x_scrollbar.grid(row=1, column=0, sticky="ew")
@@ -213,15 +211,12 @@ class HealthNetworkApp:
         ttk.Button(results_frame, text="Back", 
                    command=self.show_custom_select_form).grid(row=2, column=0, columnspan=2, pady=20)
 
-
-
     def perform_join_select(self):
         self.clear_frame()
 
         join_frame = ttk.LabelFrame(self.main_frame, text="Dynamic Join Selector", padding="10")
         join_frame.grid(row=0, column=0, padx=5, pady=5)
 
-        # Dropdowns for table and join type selection
         tables = self.get_all_tables()
         join_types = ["INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "FULL JOIN"]
 
@@ -234,7 +229,6 @@ class HealthNetworkApp:
             return table_var
 
         def column_selection(row, table_var):
-            # Column selection for Table 1
             ttk.Label(join_frame, text=f"Select Columns:").grid(row=row, column=2, sticky="w", padx=(20,0))
             table_cols_frame = ttk.Frame(join_frame)
             table_cols_frame.grid(row=row, column=3, sticky="w")
@@ -267,7 +261,7 @@ class HealthNetworkApp:
             ttk.Label(join_frame, text="Join Type:").grid(row=row, column=0, sticky="w")
             join_type_var = tk.StringVar()
             join_type_menu = ttk.OptionMenu(join_frame, join_type_var, None, *join_types)
-            join_type_var.set(join_types[0])  # Explicitly set INNER JOIN
+            join_type_var.set(join_types[0])  # explicitly set INNER JOIN
             join_type_menu.grid(row=row, column=1, sticky="ew")
             return join_type_var
 
@@ -316,33 +310,25 @@ class HealthNetworkApp:
             tables_selected_cols = table1_selected_cols + table2_selected_cols
 
             query_joined_tables_part = f"{self.table1.get()} {self.join1.get()} {self.table2.get()} ON {self.on_condition1.get()}"
-            # query_ON_part = self.on_condition1.get()
             
             if self.table3.get() != "Select a Table" and self.on_condition2.get() != "":
                 query_joined_tables_part += f" {self.join2.get()} {self.table3.get()} ON {self.on_condition2.get()}"
-                # query_ON_part += f" AND {self.on_condition2.get()}"
                 table3_selected_cols = get_selected_columns(self.table3.get(), self.table3_selected_cols)
                 tables_selected_cols += table3_selected_cols
             
                 if self.table4.get() != "Select a Table" and self.on_condition3.get() != "":
-                    print("table 4")
                     query_joined_tables_part += f" {self.join3.get()} {self.table4.get()} ON {self.on_condition3.get()}"
-                    # query_ON_part += f" AND {self.on_condition3.get()}"
                     table4_selected_cols = get_selected_columns(self.table4.get(), self.table4_selected_cols)
                     tables_selected_cols += table4_selected_cols
 
             query_selected_columns_part = ', '.join(tables_selected_cols)
 
-            # Execute join query
             try:
                 cursor = self.conn.cursor()
                 query = f"SELECT {query_selected_columns_part} FROM {query_joined_tables_part}"
                 cursor.execute(query)
-                print(query)
 
-                # Display results
                 columns = [desc[0] for desc in cursor.description]
-                print(columns) ##############
                 results_frame = ttk.Frame(join_frame)
                 results_frame.grid(row=5, column=0, columnspan=2, sticky="nsew")
 
@@ -363,10 +349,7 @@ class HealthNetworkApp:
             except Exception as e:
                 messagebox.showerror("Error", f"Error executing join query: {e}")
 
-        # Execute button
         ttk.Button(join_frame, text="Execute Join", command=execute_join).grid(row=10, column=0, columnspan=2, pady=10)
-
-        # Back button
         ttk.Button(join_frame, text="Back", command=lambda: self.show_operations_menu(self.current_table)).grid(row=cur_row + 1, column=0, columnspan=2, pady=10)
 
     def show_insert_form(self):
@@ -375,7 +358,6 @@ class HealthNetworkApp:
         insert_frame = ttk.LabelFrame(self.main_frame, text=f"Insert {self.current_table}", padding="10")
         insert_frame.grid(row=0, column=0, padx=5, pady=5)
         
-        # Create entry fields based on table columns
         self.entries = {}
         for i, column in enumerate(self.get_table_columns()):
             ttk.Label(insert_frame, text=column).grid(row=i, column=0, pady=2, padx=5, sticky="e")
@@ -386,20 +368,27 @@ class HealthNetworkApp:
                   command=self.perform_insert).grid(row=len(self.entries), column=0, columnspan=2, pady=20)
         ttk.Button(insert_frame, text="Back", 
                   command=lambda: self.show_operations_menu(self.current_table)).grid(row=len(self.entries)+1, column=0, columnspan=2)
-    
+
     def perform_insert(self):
-        values = [self.entries[column].get() for column in self.entries]
-        columns = ", ".join(self.entries.keys())
-        placeholders = ", ".join(["?" for _ in values])
+        provided_values = {column: self.entries[column].get() for column in self.entries if self.entries[column].get()}
+        
+        if not provided_values:
+            messagebox.showerror("Error", "Please provide at least one value.")
+            return
+        
+        columns = ", ".join(provided_values.keys())
+        placeholders = ", ".join(["?" for _ in provided_values])
+        values = list(provided_values.values())
         
         try:
             cursor = self.conn.cursor()
-            cursor.execute(f"INSERT INTO {self.current_table} ({columns}) VALUES ({placeholders})", values)
+            query = f"INSERT INTO {self.current_table} ({columns}) VALUES ({placeholders})"
+            cursor.execute(query, values)
             self.conn.commit()
             messagebox.showinfo("Success", "Record inserted successfully!")
-            # Clear entries after successful insert
+            
             for entry in self.entries.values():
-                entry.delete(0, tk.END)
+                entry.delete(0, tk.END) # clear entries after successful insert
         except Exception as e:
             messagebox.showerror("Error", f"Error inserting record: {e}")
         finally:
@@ -412,39 +401,33 @@ class HealthNetworkApp:
         update_frame = ttk.LabelFrame(self.main_frame, text=f"Update {self.current_table}", padding="10")
         update_frame.grid(row=0, column=0, padx=5, pady=5)
         
-        # Condition builder frame
         condition_frame = ttk.LabelFrame(update_frame, text="Search Conditions", padding="10")
         condition_frame.grid(row=0, column=0, columnspan=2, pady=5)
         
-        # Available columns
         columns = self.get_table_columns()
-        
-        # Condition entries list to store multiple conditions
         self.conditions = []
         
         def add_condition_row():
             condition_row = len(self.conditions)
             
-            # Create frame for this condition
             row_frame = ttk.Frame(condition_frame)
             row_frame.grid(row=condition_row, column=0, pady=2)
             
-            # Column dropdown
+            # column dropdown
             column_var = tk.StringVar()
             column_dropdown = ttk.Combobox(row_frame, textvariable=column_var, values=columns, width=20)
             column_dropdown.grid(row=0, column=0, padx=2)
             
-            # Operator dropdown
+            # operator dropdown
             operator_var = tk.StringVar()
             operator_dropdown = ttk.Combobox(row_frame, textvariable=operator_var, 
                                         values=['=', '>', '<', '>=', '<=', 'LIKE', 'IN'], width=10)
             operator_dropdown.grid(row=0, column=1, padx=2)
             
-            # Value entry
+            # value entry
             value_entry = ttk.Entry(row_frame, width=30)
             value_entry.grid(row=0, column=2, padx=2)
             
-            # Add to conditions list
             self.conditions.append({
                 'frame': row_frame,
                 'column': column_var,
@@ -452,39 +435,32 @@ class HealthNetworkApp:
                 'value': value_entry
             })
         
-        # Add initial condition row
         add_condition_row()
         
-        # Button to add more conditions
         ttk.Button(condition_frame, text="Add Condition", 
                 command=add_condition_row).grid(row=100, column=0, pady=5)
-        
+
         ttk.Button(condition_frame, text="Load Records", 
                 command=self.load_records_for_update).grid(row=101, column=0, pady=5)
         
-        # Create Treeview for displaying matching records
         columns = self.get_table_columns()
         self.update_tree = ttk.Treeview(update_frame, columns=columns, show="headings", height=5)
         
-        # Set column headings
         for col in columns:
             self.update_tree.heading(col, text=col)
             self.update_tree.column(col, width=100)
-        
+
         self.update_tree.grid(row=1, column=0, columnspan=2, pady=10)
         
-        # Update section
         update_section = ttk.LabelFrame(update_frame, text="Update Values", padding="10")
         update_section.grid(row=2, column=0, columnspan=2, pady=5)
         
-        # Create entry fields for update
-        self.update_entries = {}
+        self.update_entries = {} # create entry fields for update
         for i, column in enumerate(columns):
             row_frame = ttk.Frame(update_section)
             row_frame.grid(row=i, column=0, pady=2)
             
-            # Checkbox to select which fields to update
-            update_var = tk.BooleanVar()
+            update_var = tk.BooleanVar() # checkbox to select which fields to update
             ttk.Checkbutton(row_frame, variable=update_var).grid(row=0, column=0, padx=5)
             
             ttk.Label(row_frame, text=column).grid(row=0, column=1, padx=5)
@@ -493,14 +469,12 @@ class HealthNetworkApp:
             
             self.update_entries[column] = {'entry': entry, 'update': update_var}
         
-        # Buttons
         ttk.Button(update_frame, text="Update Selected", 
                 command=self.perform_update).grid(row=3, column=0, columnspan=2, pady=10)
         ttk.Button(update_frame, text="Back", 
                 command=lambda: self.show_operations_menu(self.current_table)).grid(row=4, column=0, columnspan=2)
 
     def build_where_clause(self):
-        """Build WHERE clause from conditions."""
         where_clauses = []
         values = []
         
@@ -526,10 +500,8 @@ class HealthNetworkApp:
         return where_clause, values
 
     def load_records_for_update(self):
-        """Load records based on search conditions."""
         try:
-            # Clear existing items
-            for item in self.update_tree.get_children():
+            for item in self.update_tree.get_children(): # clear existing items
                 self.update_tree.delete(item)
             
             where_clause, values = self.build_where_clause()
@@ -551,13 +523,11 @@ class HealthNetworkApp:
                 cursor.close()
 
     def perform_update(self):
-        """Perform update on selected records."""
         selected_items = self.update_tree.selection()
         if not selected_items:
             messagebox.showerror("Error", "Please select records to update")
             return
         
-        # Build SET clause
         set_clauses = []
         set_values = []
         for column, entry_data in self.update_entries.items():
@@ -569,7 +539,6 @@ class HealthNetworkApp:
             messagebox.showerror("Error", "Please select at least one field to update")
             return
         
-        # Build WHERE clause for selected records
         id_column = f"{self.current_table}ID"
         selected_ids = [self.update_tree.item(item)['values'][0] for item in selected_items]
         where_clause = f"{id_column} IN ({','.join(['?' for _ in selected_ids])})"
@@ -596,39 +565,30 @@ class HealthNetworkApp:
         delete_frame = ttk.LabelFrame(self.main_frame, text=f"Delete from {self.current_table}", padding="10")
         delete_frame.grid(row=0, column=0, padx=5, pady=5)
         
-        # Condition builder frame
         condition_frame = ttk.LabelFrame(delete_frame, text="Search Conditions", padding="10")
         condition_frame.grid(row=0, column=0, pady=5)
         
-        # Available columns
         columns = self.get_table_columns()
         
-        # Condition entries list to store multiple conditions
         self.conditions = []
-        
         def add_condition_row():
             condition_row = len(self.conditions)
             
-            # Create frame for this condition
             row_frame = ttk.Frame(condition_frame)
             row_frame.grid(row=condition_row, column=0, pady=2)
             
-            # Column dropdown
-            column_var = tk.StringVar()
+            column_var = tk.StringVar() # column dropdown 
             column_dropdown = ttk.Combobox(row_frame, textvariable=column_var, values=columns, width=20)
             column_dropdown.grid(row=0, column=0, padx=2)
             
-            # Operator dropdown
-            operator_var = tk.StringVar()
+            operator_var = tk.StringVar() # operator dropdown
             operator_dropdown = ttk.Combobox(row_frame, textvariable=operator_var, 
                                         values=['=', '>', '<', '>=', '<=', 'LIKE', 'IN'], width=10)
             operator_dropdown.grid(row=0, column=1, padx=2)
             
-            # Value entry
-            value_entry = ttk.Entry(row_frame, width=30)
+            value_entry = ttk.Entry(row_frame, width=30) # value entry
             value_entry.grid(row=0, column=2, padx=2)
             
-            # Add to conditions list
             self.conditions.append({
                 'frame': row_frame,
                 'column': column_var,
@@ -636,28 +596,23 @@ class HealthNetworkApp:
                 'value': value_entry
             })
         
-        # Add initial condition row
         add_condition_row()
         
-        # Button to add more conditions
         ttk.Button(condition_frame, text="Add Condition", 
                 command=add_condition_row).grid(row=100, column=0, pady=5)
         
         ttk.Button(condition_frame, text="Find Records", 
                 command=self.find_records_for_delete).grid(row=101, column=0, pady=5)
         
-        # Create Treeview
         columns = self.get_table_columns()
         self.delete_tree = ttk.Treeview(delete_frame, columns=columns, show="headings", height=10)
         
-        # Set column headings
         for col in columns:
             self.delete_tree.heading(col, text=col)
             self.delete_tree.column(col, width=100)
         
         self.delete_tree.grid(row=1, column=0, pady=10)
         
-        # Add scrollbars
         y_scrollbar = ttk.Scrollbar(delete_frame, orient="vertical", command=self.delete_tree.yview)
         x_scrollbar = ttk.Scrollbar(delete_frame, orient="horizontal", command=self.delete_tree.xview)
         self.delete_tree.configure(yscrollcommand=y_scrollbar.set, xscrollcommand=x_scrollbar.set)
@@ -665,18 +620,15 @@ class HealthNetworkApp:
         y_scrollbar.grid(row=1, column=1, sticky="ns")
         x_scrollbar.grid(row=2, column=0, sticky="ew")
         
-        # Buttons
         ttk.Button(delete_frame, text="Delete Selected", 
                 command=self.perform_delete).grid(row=3, column=0, pady=10)
         ttk.Button(delete_frame, text="Back", 
                 command=lambda: self.show_operations_menu(self.current_table)).grid(row=4, column=0)
 
     def find_records_for_delete(self):
-        """Find records based on search conditions."""
         try:
-            # Clear existing items
             for item in self.delete_tree.get_children():
-                self.delete_tree.delete(item)
+                self.delete_tree.delete(item) # clear existing items
             
             where_clause, values = self.build_where_clause()
             
@@ -697,7 +649,6 @@ class HealthNetworkApp:
                 cursor.close()
 
     def perform_delete(self):
-        """Delete selected records."""
         selected_items = self.delete_tree.selection()
         if not selected_items:
             messagebox.showerror("Error", "Please select records to delete")
@@ -708,7 +659,7 @@ class HealthNetworkApp:
                                 f"Are you sure you want to delete {len(selected_items)} record(s)?"):
                 cursor = self.conn.cursor()
                 
-                # Build WHERE clause for selected records
+                # let's build a WHERE clause for selected records
                 id_column = f"{self.current_table}ID"
                 selected_ids = [self.delete_tree.item(item)['values'][0] for item in selected_items]
                 placeholders = ','.join(['?' for _ in selected_ids])
@@ -719,7 +670,6 @@ class HealthNetworkApp:
                 
                 messagebox.showinfo("Success", f"Deleted {len(selected_items)} record(s)")
                 
-                # Refresh the display
                 self.find_records_for_delete()
         except Exception as e:
             messagebox.showerror("Error", f"Error deleting records: {e}")
@@ -788,7 +738,7 @@ class HealthNetworkApp:
             column_names = []
             report_title = f"{self.current_table} Analysis Report"
 
-            # Get basic statistics for any table
+            # calc basic statistics for any table
             cursor.execute(f"""
                 SELECT 
                     COUNT(*) as TotalRecords
@@ -798,7 +748,7 @@ class HealthNetworkApp:
             report_data.extend([total_records[0]])
             column_names.extend([f'Total {self.current_table}s'])
 
-            # Add table-specific statistics
+            # add table-specific statistics
             if self.current_table == "Patient":
                 cursor.execute("""
                     SELECT 
@@ -816,6 +766,7 @@ class HealthNetworkApp:
                     'Average Age',
                     'Unique Insurance Providers'
                 ])
+
             elif self.current_table == "HealthProvider":
                 cursor.execute("""
                     SELECT COUNT(DISTINCT Specialty)
@@ -829,13 +780,12 @@ class HealthNetworkApp:
                     SELECT DISTINCT Specialty
                     FROM HealthProvider
                 """)
-                # print(cursor.fetchone())
+
                 specialties = cursor.fetchall()
                 for idx, specialty in enumerate(specialties):
                     report_data.extend([specialty[0]])
                     column_names.extend([f'     Specialty {idx+1}'])
 
-            # Display report in text widget
             report_text = tk.Text(report_frame, height=15, width=60)
             report_text.insert(tk.END, f"Report Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
 
@@ -848,7 +798,6 @@ class HealthNetworkApp:
             report_text.config(state='disabled')
             report_text.grid(row=0, column=0, padx=5, pady=5)
 
-            # Add Export to PDF button
             def export_to_pdf():
                 file_path = filedialog.asksaveasfilename(
                     defaultextension=".pdf",
@@ -873,23 +822,17 @@ class HealthNetworkApp:
                 cursor.close()
 
     def generate_pdf_report(self, report_title, report_data, column_names, output_file_path):
-        """Generate and save a PDF report with charts."""
         try:
-            # Create the PDF canvas
             c = canvas.Canvas(output_file_path, pagesize=letter)
             c.setFont("Helvetica-Bold", 16)
 
-            # Add title
             c.drawString(100, 750, report_title)
 
-            # Add timestamp
             c.setFont("Helvetica", 12)
             c.drawString(100, 730, f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-            # Add line separator
             c.line(100, 720, 500, 720)
 
-            # Write the report data
             y = 700
             for col, value in zip(column_names, report_data):
                 if isinstance(value, float):
@@ -899,39 +842,28 @@ class HealthNetworkApp:
                 c.drawString(100, y, f"{col}: {formatted_value}")
                 y -= 20
 
-            # Generate and add charts based on table type
             if self.current_table == "Patient":
-                # Create pie chart for insurance status
-                self.add_insurance_status_chart(c, report_data, column_names)
-
-                # Create bar chart for age distribution
-                self.add_age_distribution_chart(c)
+                self.add_insurance_status_chart(c, report_data, column_names) # create pie chart for insurance status
+                self.add_age_distribution_chart(c) # create bar chart for age distribution
 
             elif self.current_table == "HealthProvider":
-                # Create pie chart for specialties distribution
-                self.add_specialty_distribution_chart(c)
+                self.add_specialty_distribution_chart(c) # create pie chart for specialties distribution
+                self.add_provider_availability_chart(c) # create bar chart for provider availability
 
-                # Create bar chart for provider availability
-                self.add_provider_availability_chart(c)
-
-            # Save the PDF
-            c.save()
+            c.save() # save the PDF
             messagebox.showinfo("Success", f"Report saved successfully to:\n{output_file_path}")
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to create PDF: {e}")
 
     def add_insurance_status_chart(self, pdf_canvas, report_data, column_names):
-        """Add insurance status pie chart to PDF."""
         try:
-            # Get insurance data from report_data
             insured_idx = column_names.index('Insured Patients')
             uninsured_idx = column_names.index('Uninsured Patients')
 
             insured = report_data[insured_idx]
             uninsured = report_data[uninsured_idx]
 
-            # Create pie chart
             plt.figure(figsize=(6, 4))
             plt.pie([insured, uninsured],
                     labels=['Insured', 'Uninsured'],
@@ -939,12 +871,11 @@ class HealthNetworkApp:
                     colors=['lightblue', 'lightcoral'])
             plt.title('Insurance Status Distribution')
 
-            # Save chart to bytes buffer
             buf = io.BytesIO()
             plt.savefig(buf, format='png', bbox_inches='tight')
             plt.close()
 
-            # Add chart to PDF
+            # add chart to PDF
             buf.seek(0)
             img = ImageReader(buf)
             pdf_canvas.drawImage(img, 100, 400, width=4 * inch, height=3 * inch)
@@ -953,7 +884,6 @@ class HealthNetworkApp:
             print(f"Error creating insurance status chart: {e}")
 
     def add_age_distribution_chart(self, pdf_canvas):
-        """Add age distribution chart to PDF."""
         try:
             cursor = self.conn.cursor()
             cursor.execute("""
@@ -987,12 +917,11 @@ class HealthNetworkApp:
             plt.ylabel('Number of Patients')
             plt.xticks(rotation=45)
 
-            # Save chart to bytes buffer
             buf = io.BytesIO()
             plt.savefig(buf, format='png', bbox_inches='tight')
             plt.close()
 
-            # Add chart to PDF
+            # add chart to PDF
             buf.seek(0)
             img = ImageReader(buf)
             pdf_canvas.drawImage(img, 100, 100, width=4 * inch, height=3 * inch)
@@ -1004,7 +933,6 @@ class HealthNetworkApp:
                 cursor.close()
 
     def add_specialty_distribution_chart(self, pdf_canvas):
-        """Add specialty distribution chart to PDF."""
         try:
             cursor = self.conn.cursor()
             cursor.execute("""
@@ -1020,12 +948,11 @@ class HealthNetworkApp:
             plt.pie(counts, labels=specialties, autopct='%1.1f%%')
             plt.title('Health Provider Specialty Distribution')
 
-            # Save chart to bytes buffer
             buf = io.BytesIO()
             plt.savefig(buf, format='png', bbox_inches='tight')
             plt.close()
 
-            # Add chart to PDF
+            # add chart to PDF
             buf.seek(0)
             img = ImageReader(buf)
             pdf_canvas.drawImage(img, x=100, y=350, width=4 * inch, height=3 * inch)
@@ -1048,8 +975,6 @@ class HealthNetworkApp:
             data = cursor.fetchall()
             specialties = [row[0] for row in data]
             availabilities = [row[1] for row in data]
-            print(specialties)
-            print(availabilities)
 
             plt.figure(figsize=(8, 6))
             sns.countplot(x=availabilities, hue=specialties)
@@ -1061,12 +986,11 @@ class HealthNetworkApp:
             plt.legend()
             plt.tight_layout()
 
-            # Save chart to bytes buffer
             buf = io.BytesIO()
             plt.savefig(buf, format='png', bbox_inches='tight')
             plt.close()
 
-            # Add chart to PDF
+            # add chart to PDF
             buf.seek(0)
             img = ImageReader(buf)
             pdf_canvas.drawImage(img, 100, 100, width=4 * inch, height=3 * inch)
