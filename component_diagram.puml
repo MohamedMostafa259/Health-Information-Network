@@ -1,0 +1,94 @@
+@startuml Health Information Network - Component Diagram
+
+' Style settings
+skinparam componentStyle uml2
+skinparam backgroundColor white
+skinparam component {
+    BackgroundColor LightBlue
+    BorderColor DarkBlue
+    ArrowColor DarkBlue
+}
+
+' Title
+title Health Information Network - Component Diagram
+
+' Components
+package "Presentation Layer" {
+    [PatientController] as PC
+    [MedicalRecordController] as MRC
+    [AppointmentController] as AC
+}
+
+package "Business Logic Layer" {
+    [PatientService] as PS
+    [AppointmentService] as AS
+}
+
+package "Data Access Layer" {
+    [PatientRepository] as PR
+    [MedicalRecordRepository] as MRR
+}
+
+package "Database" {
+    database "Patient Table" as PT
+    database "MedicalRecord Table" as MRT
+    database "Appointment Table" as AT
+}
+
+' DTOs
+package "Data Transfer Objects" {
+    [PatientDTO] as PDTO
+    [MedicalRecordDTO] as MRDTO
+    [AppointmentDTO] as ADTO
+    [PatientRecordDTO] as PRDTO
+}
+
+' Relationships
+' Controller to Service
+PC --> PS
+MRC --> PS
+AC --> AS
+
+' Service to Repository
+PS --> PR
+PS --> MRR
+AS --> PR
+
+' Repository to Database
+PR --> PT
+MRR --> MRT
+PR --> AT
+
+' DTO relationships
+PC ..> PDTO
+PC ..> PRDTO
+MRC ..> MRDTO
+AC ..> ADTO
+
+' Notes
+note right of PC
+  Handles patient-related
+  HTTP requests
+end note
+
+note right of MRC
+  Manages medical record
+  operations
+end note
+
+note right of AC
+  Handles appointment
+  scheduling
+end note
+
+note right of PS
+  Contains business logic
+  for patient operations
+end note
+
+note right of AS
+  Manages appointment
+  business logic
+end note
+
+@enduml 
