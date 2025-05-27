@@ -10,7 +10,6 @@ public class DBHelper {
     public static void init() throws SQLException {
         try (Connection conn = DriverManager.getConnection(DB_URL);
              Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS students (id INTEGER PRIMARY KEY, name TEXT, major TEXT)");
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS doctors (id INTEGER PRIMARY KEY, name TEXT, specialty TEXT)");
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS patients (id INTEGER PRIMARY KEY, name TEXT, illness TEXT)");
         }
